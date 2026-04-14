@@ -1,0 +1,100 @@
+body {
+  margin: 0;
+  overflow: hidden;
+}
+
+/* 视口容器 */
+.viewport {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background-color: #f8fafc;
+}
+
+/* 正在拖拽时的鼠标样式 */
+.viewport.grabbing {
+  cursor: grabbing;
+}
+.viewport.grab {
+  cursor: grab;
+}
+
+.viewport.crosshair {
+  cursor: crosshair;
+}
+
+/* 无限网格背景 */
+.grid-bg {
+  position: absolute;
+  inset: -999999px;
+  background-image: radial-gradient(circle, #cbd5e1 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* 测试便签的样式 */
+.test-node {
+  position: absolute;
+  width: 200px;
+  height: 120px;
+  background-color: white;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+  border-radius: 8px;
+  padding: 16px;
+  border: 1px solid #e2e8f0;
+  user-select: none;
+}
+
+.toolbar {
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: white;
+  padding: 8px;
+  border-radius:12px;
+  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+  border: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 100;
+}
+
+.tool-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  border: none;
+  background-color: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  transition: all 0.2s;
+}
+
+.tool-btn.hover {
+  background-color: #f1f5f9;
+}
+
+.tool-btn.active {
+  background-color: #eff6ff;
+  color: #3b82f6;
+  box-shadow: inset 0 0 0 1px #3b82f6;
+}
+
+.node-text {
+  background-color: #fef08a;
+}
+
+.node-rect {
+  background-color: #bae6fd;
+  border-radius: 4px;
+}
+
+.node-circle {
+  background-color: #fbcfe8;
+  border-radius: 50%;
+}
