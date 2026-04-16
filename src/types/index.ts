@@ -1,7 +1,7 @@
 export type ToolType = 'cursor' | 'text' | 'rect' | 'circle';
 
 export interface CanvasNode {
-  id:string;
+  id: string;
   type: ToolType;
   x: number;
   y: number;

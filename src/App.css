@@ -1,184 +1,89 @@
-.counter {
-  font-size: 16px;
-  padding: 5px 10px;
-  border-radius: 5px;
-  color: var(--accent);
-  background: var(--accent-bg);
-  border: 2px solid transparent;
-  transition: border-color 0.3s;
-  margin-bottom: 24px;
-
-  &:hover {
-    border-color: var(--accent-border);
-  }
-  &:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-  }
-}
-
-.hero {
+/* 视口容器 */
+.viewport {
   position: relative;
-
-  .base,
-  .framework,
-  .vite {
-    inset-inline: 0;
-    margin: 0 auto;
-  }
-
-  .base {
-    width: 170px;
-    position: relative;
-    z-index: 0;
-  }
-
-  .framework,
-  .vite {
-    position: absolute;
-  }
-
-  .framework {
-    z-index: 1;
-    top: 34px;
-    height: 28px;
-    transform: perspective(2000px) rotateZ(300deg) rotateX(44deg) rotateY(39deg)
-      scale(1.4);
-  }
-
-  .vite {
-    z-index: 0;
-    top: 107px;
-    height: 26px;
-    width: auto;
-    transform: perspective(2000px) rotateZ(300deg) rotateX(40deg) rotateY(39deg)
-      scale(0.8);
-  }
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background-color: #f8fafc;
 }
 
-#center {
-  display: flex;
-  flex-direction: column;
-  gap: 25px;
-  place-content: center;
-  place-items: center;
-  flex-grow: 1;
-
-  @media (max-width: 1024px) {
-    padding: 32px 20px 24px;
-    gap: 18px;
-  }
+/* 正在拖拽时的鼠标样式 */
+.viewport.grabbing {
+  cursor: grabbing;
+}
+.viewport.grab {
+  cursor: grab;
 }
 
-#next-steps {
-  display: flex;
-  border-top: 1px solid var(--border);
-  text-align: left;
-
-  & > div {
-    flex: 1 1 0;
-    padding: 32px;
-    @media (max-width: 1024px) {
-      padding: 24px 20px;
-    }
-  }
-
-  .icon {
-    margin-bottom: 16px;
-    width: 22px;
-    height: 22px;
-  }
-
-  @media (max-width: 1024px) {
-    flex-direction: column;
-    text-align: center;
-  }
+.viewport.crosshair {
+  cursor: crosshair;
 }
 
-#docs {
-  border-right: 1px solid var(--border);
-
-  @media (max-width: 1024px) {
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-  }
+/* 无限网格背景 */
+.grid-bg {
+  position: absolute;
+  inset: -999999px;
+  background-image: radial-gradient(circle, #cbd5e1 1px, transparent 1px);
+  background-size: 20px 20px;
 }
 
-#next-steps ul {
-  list-style: none;
-  padding: 0;
-  display: flex;
-  gap: 8px;
-  margin: 32px 0 0;
-
-  .logo {
-    height: 18px;
-  }
-
-  a {
-    color: var(--text-h);
-    font-size: 16px;
-    border-radius: 6px;
-    background: var(--social-bg);
-    display: flex;
-    padding: 6px 12px;
-    align-items: center;
-    gap: 8px;
-    text-decoration: none;
-    transition: box-shadow 0.3s;
-
-    &:hover {
-      box-shadow: var(--shadow);
-    }
-    .button-icon {
-      height: 18px;
-      width: 18px;
-    }
-  }
-
-  @media (max-width: 1024px) {
-    margin-top: 20px;
-    flex-wrap: wrap;
-    justify-content: center;
-
-    li {
-      flex: 1 1 calc(50% - 8px);
-    }
-
-    a {
-      width: 100%;
-      justify-content: center;
-      box-sizing: border-box;
-    }
-  }
+.test-node {
+  position: absolute;
+  width: 200px;
+  height: 120px;
+  background-color: white;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+  border-radius: 8px;
+  padding: 16px;
+  border: 1px solid #e2e8f0;
+  user-select: none;
 }
 
-#spacer {
-  height: 88px;
-  border-top: 1px solid var(--border);
-  @media (max-width: 1024px) {
-    height: 48px;
-  }
+.test-node.selected {
+  border: 2px solid #3b82f6;
+  outline: 2px solid transparent;
 }
 
-.ticks {
-  position: relative;
-  width: 100%;
-
-  &::before,
-  &::after {
-    content: '';
-    position: absolute;
-    top: -4.5px;
-    border: 5px solid transparent;
-  }
-
-  &::before {
-    left: 0;
-    border-left-color: var(--border);
-  }
-  &::after {
-    right: 0;
-    border-right-color: var(--border);
-  }
+.node-text {
+  background-color: #fef08a;
 }
+
+.node-rect {
+  background-color: #bae6fd;
+  border-radius: 4px;
+}
+
+.node-circle {
+  background-color: #fbcfe8;
+  border-radius: 50%;
+}
+
+.resize-handle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background-color: white;
+  border: 2px solid #3b82f6;
+  border-radius: 2px;
+  z-index: 10;
+}
+
+.handle-tl { top: -6px; left: -6px; cursor: nwse-resize; }
+.handle-tc { top: -6px; left: 50%; transform: translateX(-50%); cursor: ns-resize; }
+.handle-tr { top: -6px; right: -6px; cursor: nesw-resize; }
+.handle-ml { top: 50%; left: -6px; transform: translateY(-50%); cursor: ew-resize; }
+.handle-mr { top: 50%; right: -6px; transform: translateY(-50%); cursor: ew-resize; }
+.handle-bl { bottom: -6px; left: -6px; cursor: nesw-resize; }
+.handle-bc { bottom: -6px; left: 50%; transform: translateX(-50%); cursor: ns-resize; }
+.handle-br { bottom: -6px; right: -6px; cursor: nwse-resize; }
+
+.edge-handle {
+  position: absolute;
+  background-color: transparent;
+  z-index: 5;
+}
+
+.edge-t { top: -4px; left: 4px; right: 4px; height: 8px; cursor: ns-resize; }
+.edge-b { bottom: -4px; left: 4px; right: 4px; height: 8px; cursor: ns-resize; }
+.edge-l { left: -4px; top: 4px; bottom: 4px; width: 8px; cursor: ew-resize; }
+.edge-r { right: -4px; top: 4px; bottom: 4px; width: 8px; cursor: ew-resize; }

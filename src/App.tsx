@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import type { Camera, CanvasNode, ToolType } from '@/types';
-import { Note } from '@/components/Note';
-import { Toolbar } from '@/components/Toolbar';
+import { Note } from '@/components/Note/Note';
+import { Toolbar } from '@/components/Toolbar/Toolbar';
 import './App.css';
 
 export default function InfiniteCanvas() {
@@ -13,6 +13,15 @@ export default function InfiniteCanvas() {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [resizingHandle, setResizingHandle] = useState<string | null>(null);
   const [editingNodeId, setEditingNodeId] = useState<string | null>(null);
+  const handleNodeUpdate = useCallback((id: string, content: string) => {
+    setNodes((prev) => prev.map(n => n.id === id ? { ...n, content } : n))
+  }, []);
+  const handleNodeBlur = useCallback(() => {
+    setEditingNodeId(null);
+  }, []);
+  const handleNodeDoubleClick = useCallback((id: string) => {
+    setEditingNodeId(id);
+  }, []);
 
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     const target = e.target as HTMLElement;
@@ -168,7 +177,7 @@ export default function InfiniteCanvas() {
 
       <Toolbar 
         activeTool={activeTool}
-        onToolChange={(tool) => setActiveTool(tool)}
+        onToolChange={setActiveTool}
       />
 
       <div
@@ -215,11 +224,9 @@ export default function InfiniteCanvas() {
                 node={node}
                 cameraZoom={camera.zoom}
                 isEditing={editingNodeId === node.id}
-                onDoubleClick={() => setEditingNodeId(node.id)}
-                onBlur={() => setEditingNodeId(null)}
-                onUpdate={(id, content) => {
-                  setNodes((prev) => prev.map(n => n.id === id ? { ...n, content } : n));
-                }}
+                onDoubleClick={handleNodeDoubleClick}
+                onBlur={handleNodeBlur}
+                onUpdate={handleNodeUpdate}
               />
             )}
             </div>

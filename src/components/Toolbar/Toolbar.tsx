@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import type { ToolType } from '@/types';
+import './Toolbar.css';
 
 interface ToolbarProps {
   activeTool: ToolType;
