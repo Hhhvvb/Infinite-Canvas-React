@@ -9,9 +9,7 @@ interface ToolbarProps {
 
 const TOOLS: { type: ToolType; icon: string; label: string; shortcut: string }[] = [
   { type: 'cursor', icon: '👆', label: '选择', shortcut: 'V' },
-  { type: 'text', icon: '📝', label: '便签', shortcut: 'N' },
-  { type: 'rect', icon: '🟦', label: '矩形', shortcut: 'R' },
-  { type: 'circle', icon: '🔴', label: '圆形', shortcut: 'O' },
+  { type: 'rounded', icon: '🟨', label: '便签', shortcut: 'N' },
 ];
 
 export const Toolbar = memo(({ activeTool, onToolChange }: ToolbarProps) => {

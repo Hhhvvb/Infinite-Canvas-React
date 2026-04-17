@@ -1,8 +1,28 @@
-export type ToolType = 'cursor' | 'text' | 'rect' | 'circle';
+export type HandleDirection = 't' | 'r' | 'b' | 'l';
+export type NodeShape = 'rounded' | 'circle';
+export type NodeColor = 'yellow' | 'blue' | 'pink' | 'green' | 'purple';
+export type ToolType = 'cursor' | NodeShape;
+
+export interface Edge {
+  id: string;
+  sourceNodeId: string;
+  sourceHandle: HandleDirection;
+  targetNodeId: string;
+  targetHandle: HandleDirection;
+}
+
+export interface DraftConnection {
+  sourceNodeId: string;
+  sourceHandle: HandleDirection;
+  // 当前鼠标在世界坐标系下的位置
+  currentX: number;
+  currentY: number;
+}
 
 export interface CanvasNode {
   id: string;
-  type: ToolType;
+  shape: NodeShape;
+  color: NodeColor;
   x: number;
   y: number;
   w: number;

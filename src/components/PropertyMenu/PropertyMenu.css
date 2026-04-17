@@ -1,0 +1,91 @@
+/* src/components/PropertyMenu/PropertyMenu.css */
+
+/* 面板主容器 */
+.property-menu-panel {
+  position: absolute; /* 绝对定位，脱离文档流 */
+  z-index: 200;       /* 必须比节点的 100 更高 */
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background-color: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+  
+  /* 入场动画 */
+  animation: menuFadeIn 0.15s ease-out forwards;
+  transform-origin: bottom left;
+  user-select: none;
+}
+
+/* 按钮分区组 */
+.menu-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 竖向分割线 */
+.menu-divider {
+  width: 1px;
+  height: 20px;
+  background-color: #cbd5e1;
+}
+
+/* 颜色小圆点按钮 */
+.color-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.15s ease;
+}
+
+.color-btn:hover {
+  transform: scale(1.15);
+}
+
+.color-btn.active {
+  border-color: #3b82f6;       /* 蓝色的描边 */
+  transform: scale(1.25);      /* 选中时放大 */
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25); /* 选中时的弥散光环 */
+}
+
+/* 形状图标按钮 */
+.shape-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: none;
+  background-color: transparent;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.15s ease;
+}
+
+.shape-btn:hover {
+  background-color: #f1f5f9;
+}
+
+.shape-btn.active {
+  background-color: #dbeafe; /* 浅蓝色背景 */
+  color: #2563eb;
+}
+
+/* 平滑浮现动画 */
+@keyframes menuFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

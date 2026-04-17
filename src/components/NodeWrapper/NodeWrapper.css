@@ -1,0 +1,27 @@
+.connection-anchor {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background-color: white;
+  border: 2px solid #94a3b8;
+  border-radius: 50%;
+  z-index: 20;
+  cursor: crosshair;
+  transition: transform 0.1s;
+}
+.connection-anchor:hover {
+  transform: scale(1.5);
+  background-color: #3b82f6;
+  border-color: #3b82f6;
+}
+/* 居中定位 */
+.anchor-t { top: -6px; left: 50%; transform: translateX(-50%); }
+.anchor-r { right: -6px; top: 50%; transform: translateY(-50%); }
+.anchor-b { bottom: -6px; left: 50%; transform: translateX(-50%); }
+.anchor-l { left: -6px; top: 50%; transform: translateY(-50%); }
+
+/* 悬浮补偿：保证 scale(1.5) 依然沿中心点放大 */
+.anchor-t:hover { transform: translateX(-50%) scale(1.5); }
+.anchor-r:hover { transform: translateY(-50%) scale(1.5); }
+.anchor-b:hover { transform: translateX(-50%) scale(1.5); }
+.anchor-l:hover { transform: translateY(-50%) scale(1.5); }
