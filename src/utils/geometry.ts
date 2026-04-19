@@ -36,3 +36,36 @@ export const getBezierPath = (
 
   return `M ${x1} ${y1} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${x2} ${y2}`;
 };
+
+export const getSvgPathFromStroke = (points: [number, number][]) => {
+  if (!points || points.length === 0) return '';
+  if (points.length === 1) return `M ${points[0][0]} ${points[0][1]} L ${points[0][0]} ${points[0][1]}`;
+
+  // 🚨 核心修复 3：完美的二次贝塞尔平滑算法
+  let path = `M ${points[0][0]} ${points[0][1]}`;
+
+  for (let i = 0; i < points.length - 1; i++) {
+    const p1 = points[i];
+    const p2 = points[i + 1];
+    
+    // 计算两点之间的中点
+    const midPoint = [
+      (p1[0] + p2[0]) / 2,
+      (p1[1] + p2[1]) / 2
+    ];
+
+    if (i === 0) {
+      // 头部：直线连到第一个中点
+      path += ` L ${midPoint[0]} ${midPoint[1]}`;
+    } else {
+      // 身体：前一个真实点作为控制点，中点作为终点，生成完美弧线
+      path += ` Q ${p1[0]} ${p1[1]} ${midPoint[0]} ${midPoint[1]}`;
+    }
+  }
+  
+  // 尾部：补齐最后一个点
+  const lastPoint = points[points.length - 1];
+  path += ` L ${lastPoint[0]} ${lastPoint[1]}`;
+
+  return path;
+};

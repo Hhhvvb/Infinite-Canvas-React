@@ -1,7 +1,7 @@
 export type HandleDirection = 't' | 'r' | 'b' | 'l';
-export type NodeShape = 'rounded' | 'circle';
+export type NodeShape = 'rounded' | 'circle' | 'path';
 export type NodeColor = 'yellow' | 'blue' | 'pink' | 'green' | 'purple';
-export type ToolType = 'cursor' | NodeShape;
+export type ToolType = 'cursor' | 'rounded' | 'pen' | 'eraser';
 
 export interface Edge {
   id: string;
@@ -28,6 +28,8 @@ export interface CanvasNode {
   w: number;
   h: number;
   content?: string;
+  points?: [number, number][];
+  strokeWidth?: number;
 }
 
 export interface Camera {

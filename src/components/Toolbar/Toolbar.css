@@ -1,18 +1,23 @@
-.toolbar {
+.toolbar-wrapper {
   position: absolute;
   left: 20px;
   top: 50%;
   transform: translateY(-50%);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+}
+
+/* 主工具栏 (去除了原先的绝对定位，交给了 wrapper) */
+.toolbar {
   background-color: white;
-  cursor: pointer;
   padding: 8px;
-  border-radius:12px;
+  border-radius: 12px;
   box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
   border: 1px solid #e2e8f0;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  z-index: 100;
 }
 
 .tool-btn {
@@ -37,4 +42,82 @@
   background-color: #eff6ff;
   color: #3b82f6;
   box-shadow: inset 0 0 0 1px #3b82f6;
+}
+
+.tool-settings-panel {
+  margin-left: 16px;
+  background-color: white;
+  padding: 12px;
+  border-radius: 12px;
+  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+  border: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  animation: popRight 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.toolbar-divider-horizontal {
+  width: 20px;
+  height: 2px;
+  background-color: #e2e8f0;
+  margin: 4px auto;
+  border-radius: 2px;
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.settings-divider {
+  width: 1px;
+  height: 24px;
+  background-color: #e2e8f0;
+}
+
+/* 颜色选择小圆点 */
+.color-dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.1s;
+}
+.color-dot:hover { transform: scale(1.15); }
+.color-dot.active { border-color: #3b82f6; transform: scale(1.2); box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2); }
+
+/* 形状选择按钮 */
+.shape-icon {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 18px;
+}
+.shape-icon.active { background-color: #dbeafe; }
+
+/* 画笔粗细按钮 */
+.pen-size-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.pen-size-btn:hover { background-color: #f1f5f9; }
+.pen-size-btn.active { background-color: #e2e8f0; }
+
+@keyframes popRight {
+  from { opacity: 0; transform: translateX(-10px); }
+  to { opacity: 1; transform: translateX(0); }
 }

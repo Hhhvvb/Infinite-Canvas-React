@@ -1,16 +1,50 @@
 import { useCallback } from 'react';
 import { useCanvasStore } from '@/store/useCanvasStore';
-import type { CanvasNode, HandleDirection, NodeShape } from '@/types';
+import type { CanvasNode, HandleDirection } from '@/types';
 
 export const useCanvasInteractions = () => {
   // ⛔️ 删除了 const store = useCanvasStore(); 
   // 彻底切断该 Hook 对全局状态的渲染订阅！
 
   const handleMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    // ✅ 在鼠标按下的瞬间，直接穿透 React 生命周期，获取最新状态
     const state = useCanvasStore.getState(); 
-    
     const target = e.target as HTMLElement;
+
+    if (!target.closest('.toolbar-wrapper')) {
+      state.setOpenSettingMenu(null);
+    }
+
+    if (e.button === 1) {
+      state.setSelectedNodeId(null);
+      state.setEditingNodeId(null);
+      state.setIsPanning(true);
+      return;
+    }
+
+    if (e.button !== 0) return;
+    if (target.closest('.toolbar-wrapper')) return;
+    
+    const defaultW = 200;
+    const defaultH = 120;
+    const worldX = (e.clientX - state.camera.x) / state.camera.zoom;
+    const worldY = (e.clientY - state.camera.y) / state.camera.zoom;
+
+    // 🚨 拦截画笔起笔
+    if (state.activeTool === 'pen') {
+      state.setSelectedNodeId(null);
+      state.startStroke(worldX, worldY);
+      return;
+    }
+
+    // 🚨 拦截橡皮擦 (Object Eraser)
+    if (state.activeTool === 'eraser') {
+      const nodeEl = target.closest('.test-node');
+      if (nodeEl) {
+        const nodeId = nodeEl.getAttribute('data-id');
+        if (nodeId) state.removeNode(nodeId);
+      }
+      return;
+    }
 
     // 检测是否点击了连接锚点
     const anchorTarget = target.closest('.connection-anchor');
@@ -50,9 +84,8 @@ export const useCanvasInteractions = () => {
       const nodeId = nodeEl.getAttribute('data-id');
       if (nodeId) {
         state.setSelectedNodeId(nodeId);
-        if (state.activeTool === 'cursor') {
-          state.setDraggingNodeId(nodeId);
-        }
+        state.setDraggingNodeId(nodeId);
+        e.stopPropagation();
       }
       return;
     }
@@ -61,38 +94,48 @@ export const useCanvasInteractions = () => {
     state.setSelectedNodeId(null);
     state.setEditingNodeId(null);
     
-    if (state.activeTool === 'cursor' || e.button === 1) {
+    if (state.activeTool === 'cursor') {
       state.setIsPanning(true);
       return;
     }
 
     // 创建新节点
-    const defaultW = 200;
-    const defaultH = 120;
-    const worldX = (e.clientX - state.camera.x) / state.camera.zoom - defaultW / 2;
-    const worldY = (e.clientY - state.camera.y) / state.camera.zoom - defaultH / 2;
-
     const newNode: CanvasNode = {
       id: Date.now().toString(),
-      color: 'yellow',
-      shape: state.activeTool as NodeShape,
-      x: worldX,
-      y: worldY,
+      shape: state.activeTool === 'rounded' ? state.noteSettings.shape : 'rounded',
+      color: state.activeTool === 'rounded' ? state.noteSettings.color : 'yellow',
+      x: worldX - defaultW / 2,
+      y: worldY - defaultH / 2,
       w: defaultW,
       h: defaultH,
       content:  '双击编辑'
     };
 
     state.addNode(newNode);
-  }, []); // ✅ 依赖项可以大胆置空，不再受闭包困扰
-
+  }, []);
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const state = useCanvasStore.getState();
 
+    if (state.activeTool === 'eraser' && e.buttons === 1) {
+      const target = e.target as HTMLElement;
+      const nodeEl = target.closest('.test-node');
+      if (nodeEl) {
+        const nodeId = nodeEl.getAttribute('data-id');
+        if (nodeId) state.removeNode(nodeId);
+      }
+      return; // 删完直接返回，不触发其他逻辑
+    }
+
+    const worldX = (e.clientX - state.camera.x) / state.camera.zoom;
+    const worldY = (e.clientY - state.camera.y) / state.camera.zoom;
+
+    if (state.activeTool === 'pen' && state.currentStroke) {
+      state.addPointToStroke(worldX, worldY);
+      return; // 终止后续操作
+    }
+
     if (state.draftConnection) {
-      const worldX = (e.clientX - state.camera.x) / state.camera.zoom;
-      const worldY = (e.clientY - state.camera.y) / state.camera.zoom;
       state.updateDraftConnection(worldX, worldY);
       return;
     }
@@ -129,7 +172,10 @@ export const useCanvasInteractions = () => {
     const state = useCanvasStore.getState();
     const target = e.target as HTMLElement;
 
-    // 【新增】：松开鼠标时，如果在另一个连线锚点上，则创建永久连线
+    if (state.currentStroke) {
+      state.finishStroke();
+    }
+
     if (state.draftConnection) {
       const anchorTarget = target.closest('.connection-anchor');
       

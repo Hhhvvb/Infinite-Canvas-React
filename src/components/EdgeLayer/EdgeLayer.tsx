@@ -7,6 +7,8 @@ export const EdgeLayer = memo(() => {
   const edges = useCanvasStore((state) => state.edges);
   const nodes = useCanvasStore((state) => state.nodes);
   const draft = useCanvasStore((state) => state.draftConnection);
+  const selectedEdgeId = useCanvasStore((state) => state.selectedEdgeId);
+  const setSelectedEdgeId = useCanvasStore((state) => state.setSelectedEdgeId);
 
   return (
     <svg 
@@ -24,19 +26,36 @@ export const EdgeLayer = memo(() => {
         const targetNode = nodes[edge.targetNodeId];
         if (!sourceNode || !targetNode) return null;
 
+        const isSelected = selectedEdgeId === edge.id;
         const p1 = getHandlePosition(sourceNode, edge.sourceHandle);
         const p2 = getHandlePosition(targetNode, edge.targetHandle);
         const path = getBezierPath(p1.x, p1.y, edge.sourceHandle, p2.x, p2.y, edge.targetHandle);
 
         return (
-          <path 
-            key={edge.id}
+          <g key={edge.id}>
+          {/* 1. 隐形的巨大点击热区 (Fat Hitbox) */}
+          <path
             d={path}
             fill="none"
-            stroke="#94a3b8"
-            strokeWidth="2"
-            markerEnd="url(#arrowhead)" // 可选：添加箭头
+            stroke="transparent"
+            strokeWidth={24} /* 🚨 24px 的点击范围，闭着眼都能点中！ */
+            style={{ cursor: 'pointer', pointerEvents: 'stroke' }}
+            onMouseDown={(e) => {
+              e.stopPropagation(); // 阻止事件冒泡到画板背景，防止瞬间取消选中
+              setSelectedEdgeId(edge.id);
+            }}
           />
+          
+          {/* 2. 真实的视觉连线 */}
+          <path
+            d={path}
+            fill="none"
+            // 🚨 选中时变成醒目的蓝色并加粗，未选中则是灰色
+            stroke={isSelected ? '#3b82f6' : '#94a3b8'} 
+            strokeWidth={isSelected ? 3 : 2}
+            style={{ pointerEvents: 'none' }} // 让真实线条无视点击，直接穿透给底层热区
+          />
+        </g>
         );
       })}
 

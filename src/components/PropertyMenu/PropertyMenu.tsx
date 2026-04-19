@@ -24,7 +24,7 @@ export const PropertyMenu = memo(() => {
   const updateNodeAppearance = useCanvasStore(state => state.updateNodeAppearance);
   const camera = useCanvasStore(state => state.camera);
 
-  if (!selectedNodeId || !selectedNode) return null;
+  if (!selectedNodeId || !selectedNode || selectedNode.shape === 'path') return null;
 
   // 计算屏幕绝对坐标：节点世界坐标 * 缩放比例 + 画布平移量
   let menuX = selectedNode.x * camera.zoom + camera.x;
