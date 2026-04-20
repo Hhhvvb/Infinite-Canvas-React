@@ -103,8 +103,6 @@ export const NodeWrapper = memo(({ id }: { id: string }) => {
             strokeLinejoin="round"
             style={{ 
               pointerEvents: 'stroke', 
-              // 🚨 核心修复 2：只有当手里拿着“选择”工具时，滑过笔迹才会变成小手
-              // 拿着画笔或橡皮擦滑过时，保持十字准星！
               cursor: activeTool === 'cursor' ? 'pointer' : 'crosshair' 
             }}
           />

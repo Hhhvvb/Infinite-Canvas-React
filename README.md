@@ -1,6 +1,6 @@
 ## ✨ 核心特性与技术架构 (Core Features & Architecture)
 
-本项目并非简单的 DOM 拖拽玩具，而是一个致力于探索商业级白板性能与交互体验的前端工程实践。
+本项目一个致力于探索商业级白板性能与交互体验的前端工程实践。
 
 ### 🧠 状态引擎与时间漫游 (State & Time-Travel Engine)
 * **原子化状态管理**：摒弃传统 React Context 导致的全量重渲染，基于 `Zustand` 实现扁平化 Store，通过 `memo` 与颗粒度状态订阅保障极速渲染。

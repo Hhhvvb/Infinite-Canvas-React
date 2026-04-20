@@ -14,7 +14,6 @@ export interface Edge {
 export interface DraftConnection {
   sourceNodeId: string;
   sourceHandle: HandleDirection;
-  // 当前鼠标在世界坐标系下的位置
   currentX: number;
   currentY: number;
 }

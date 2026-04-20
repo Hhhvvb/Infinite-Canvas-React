@@ -29,14 +29,12 @@ export const useCanvasInteractions = () => {
     const worldX = (e.clientX - state.camera.x) / state.camera.zoom;
     const worldY = (e.clientY - state.camera.y) / state.camera.zoom;
 
-    // 🚨 拦截画笔起笔
     if (state.activeTool === 'pen') {
       state.setSelectedNodeId(null);
       state.startStroke(worldX, worldY);
       return;
     }
 
-    // 🚨 拦截橡皮擦 (Object Eraser)
     if (state.activeTool === 'eraser') {
       const nodeEl = target.closest('.test-node');
       if (nodeEl) {

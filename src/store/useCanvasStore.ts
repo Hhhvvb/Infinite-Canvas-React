@@ -36,33 +36,29 @@ interface CanvasState {
   setDraggingNodeId: (id: string | null) => void;
   setSelectedNodeId: (id: string | null) => void;
   setSelectedEdgeId: (id: string | null) => void;
+  addNode: (node: CanvasNode) => void;
+  updateNodeContent: (id: string, content: string) => void;
   removeEdge: (id: string) => void;
   removeNode: (id: string) => void;
   setResizingHandle: (handle: string | null) => void;
   setEditingNodeId: (id: string | null) => void;
   setDraftConnection: (draft: DraftConnection | null) => void;
   updateDraftConnection: (x: number, y: number) => void;
+  updateNodePosition: (id: string, dx: number, dy: number) => void;
+  updateNodeSize: (id: string, handle: string, dx: number, dy: number) => void;
   addEdge: (edge: Edge) => void;
   updateNodeAppearance: (id: string, updates: Partial<Pick<CanvasNode, 'shape' | 'color'>>) => void;
   startStroke: (x: number, y: number) => void;
   addPointToStroke: (x: number, y: number) => void;
   finishStroke: () => void;
-  setNoteSettings: (settings: Partial<{ color: NodeColor; shape: NodeShape }>) => void;
-  setPenSettings: (settings: Partial<{ color: NodeColor; size: number }>) => void;
+  setNoteSettings: (settings: Partial<Pick<CanvasNode, 'shape' | 'color'>>) => void;
+  setPenSettings: (settings: Partial<Pick<CanvasNode, 'shape' | 'color'>>) => void;
   setOpenSettingMenu: (menu: ToolType | null) => void;
   saveHistory: () => void;
   undo: () => void;
   redo: () => void;
   loadProject: (data: any) => void;
   resetCanvas: () => void;
-
-  // 节点操作
-  addNode: (node: CanvasNode) => void;
-  updateNodeContent: (id: string, content: string) => void;
-  
-  // 高频交互专用 Action (性能关键)
-  updateNodePosition: (id: string, dx: number, dy: number) => void;
-  updateNodeSize: (id: string, handle: string, dx: number, dy: number) => void;
 }
 
 const cloneSnapshot = (state: CanvasState): HistorySnapshot => ({
@@ -106,6 +102,9 @@ export const useCanvasStore = create<CanvasState>()(
       setResizingHandle: (handle) => set({ resizingHandle: handle }),
       setEditingNodeId: (id) => set({ editingNodeId: id }),
       setDraftConnection: (draft) => set({ draftConnection: draft }),
+      setNoteSettings: (settings) => set(state => ({ noteSettings: { ...state.noteSettings, ...settings }})),
+      setPenSettings: (settings) => set(state => ({ penSettings: { ...state.penSettings, ...settings }})),
+      setOpenSettingMenu: (menu) => set({ openSettingMenu: menu }),
 
       // 业务逻辑 Action
       addNode: (node) => {
@@ -141,7 +140,7 @@ export const useCanvasStore = create<CanvasState>()(
         });
       },
 
-      // 节点移动：基于 Delta 增量更新，避免外部计算坐标偏移
+      // 节点移动：基于 Delta 增量更新
       updateNodePosition: (id, dx, dy) => set((state) => {
         const node = state.nodes[id];
         if (!node) return state;
@@ -153,7 +152,7 @@ export const useCanvasStore = create<CanvasState>()(
         };
       }),
 
-      // 节点缩放：完美复现你原先 App.tsx 中的边界检查逻辑
+      // 节点缩放
       updateNodeSize: (id, handle, dx, dy) => set((state) => {
         const node = state.nodes[id];
         if (!node) return state;
@@ -203,7 +202,7 @@ export const useCanvasStore = create<CanvasState>()(
       addEdge: (edge) => {
         const state = get();
         const isDuplicate = state.edges.some(
-          e => e.sourceNodeId === edge.sourceNodeId && e.targetNodeId === edge.targetNodeId
+          e => (e.sourceNodeId === edge.sourceNodeId && e.targetNodeId === edge.targetNodeId) || (e.sourceNodeId === edge.targetNodeId && e.targetNodeId === edge.sourceNodeId) // 无向图视角下的重复边检查
         );
         if (isDuplicate) return;
 
@@ -215,14 +214,22 @@ export const useCanvasStore = create<CanvasState>()(
       },
 
       updateNodeAppearance: (id, updates) => {
-        get().saveHistory();
+        const state = get();
+        const node = state.nodes[id];
+        if (!node) return;
+
+        const hasShapeUpdate = updates.shape !== undefined && updates.shape !== node.shape;
+        const hasColorUpdate = updates.color !== undefined && updates.color !== node.color;
+        if (!hasShapeUpdate && !hasColorUpdate) return;
+
+        state.saveHistory();
         set((state) => {
-          const node = state.nodes[id];
-          if (!node) return state;
+          const currentNode = state.nodes[id];
+          if (!currentNode) return state;
           return {
             nodes: {
               ...state.nodes,
-              [id]: { ...node, ...updates }
+              [id]: { ...currentNode, ...updates }
             }
           };
         })
@@ -231,7 +238,7 @@ export const useCanvasStore = create<CanvasState>()(
       
       addPointToStroke: (x, y) => set((state) => {
         if (!state.currentStroke) return state;
-        // 简单的节流：如果距离上一个点太近（比如小于2px），就不记录，优化性能
+        // 节流：如果距离上一个点太近，就不记录，优化性能
         const lastPoint = state.currentStroke[state.currentStroke.length - 1];
         if (Math.hypot(lastPoint[0] - x, lastPoint[1] - y) < 4) return state;
         
@@ -261,7 +268,6 @@ export const useCanvasStore = create<CanvasState>()(
           const minX = Math.min(...xs), maxX = Math.max(...xs);
           const minY = Math.min(...ys), maxY = Math.max(...ys);
           
-          // 因为我们之前加了兜底，单点生成的包围盒也是 20x20，体验很好
           const w = Math.max(20, maxX - minX); 
           const h = Math.max(20, maxY - minY);
 
@@ -296,8 +302,8 @@ export const useCanvasStore = create<CanvasState>()(
           delete newNodes[id];
           return { 
             nodes: newNodes, 
+            // 把源头或目标是这个节点的连线也一起删掉！
             nodeIds: state.nodeIds.filter(nId => nId !== id),
-            // 核心：把源头或目标是这个节点的连线也一起删掉！
             edges: state.edges.filter(e => e.sourceNodeId !== id && e.targetNodeId !== id),
             selectedNodeId: null,
           };
@@ -305,16 +311,12 @@ export const useCanvasStore = create<CanvasState>()(
       },
 
       removeEdge: (id) => {
-        get().saveHistory(); // 👈 接入时光机
+        get().saveHistory();
         set((state) => ({
           edges: state.edges.filter(e => e.id !== id),
           selectedEdgeId: null, // 删除后清空选中态
         }));
       },
-
-      setNoteSettings: (settings) => set(state => ({ noteSettings: { ...state.noteSettings, ...settings }})),
-      setPenSettings: (settings) => set(state => ({ penSettings: { ...state.penSettings, ...settings }})),
-      setOpenSettingMenu: (menu) => set({ openSettingMenu: menu }),
 
       saveHistory: () => set((state) => {
         return {
@@ -331,8 +333,8 @@ export const useCanvasStore = create<CanvasState>()(
         
         return {
           past: newPast,
-          future: [cloneSnapshot(state), ...state.future], // 🚨 核心：必须深拷贝进未来！
-          nodes: JSON.parse(JSON.stringify(previous.nodes)), // 🚨 核心：必须深拷贝回当前态！
+          future: [cloneSnapshot(state), ...state.future],
+          nodes: JSON.parse(JSON.stringify(previous.nodes)),
           nodeIds: [...previous.nodeIds],
           edges: JSON.parse(JSON.stringify(previous.edges)),
           selectedNodeId: null, 
@@ -368,10 +370,8 @@ export const useCanvasStore = create<CanvasState>()(
 
       resetCanvas: () => {
         const state = get();
-        // 只有当画板上有东西时才执行清空，避免无意义的保存
         if (state.nodeIds.length === 0 && state.edges.length === 0) return;
 
-        // 🚨 核心体验：在毁灭世界之前，拍个快照存进历史里！
         state.saveHistory();
 
         set({

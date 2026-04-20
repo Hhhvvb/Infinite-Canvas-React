@@ -1,4 +1,3 @@
-// src/utils/geometry.ts
 import type { HandleDirection, CanvasNode } from '@/types';
 
 // 获取节点某个锚点(t, r, b, l)的精确世界坐标
@@ -11,13 +10,12 @@ export const getHandlePosition = (node: CanvasNode, handle: HandleDirection) => 
   }
 };
 
-// 计算带有完美弧度的三次贝塞尔曲线路径
+// 计算三次贝塞尔曲线路径
 export const getBezierPath = (
   x1: number, y1: number, dir1: HandleDirection,
   x2: number, y2: number, dir2: HandleDirection
 ) => {
-  // 控制点的动态偏移量，距离越远，控制点拉得越长，弧度越自然
-  const distance = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+  const distance = Math.hypot(x2 - x1, y2 - y1);
   const offset = Math.max(50, distance * 0.25); 
 
   let cx1 = x1, cy1 = y1;
@@ -41,7 +39,6 @@ export const getSvgPathFromStroke = (points: [number, number][]) => {
   if (!points || points.length === 0) return '';
   if (points.length === 1) return `M ${points[0][0]} ${points[0][1]} L ${points[0][0]} ${points[0][1]}`;
 
-  // 🚨 核心修复 3：完美的二次贝塞尔平滑算法
   let path = `M ${points[0][0]} ${points[0][1]}`;
 
   for (let i = 0; i < points.length - 1; i++) {
