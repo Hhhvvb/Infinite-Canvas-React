@@ -117,7 +117,7 @@ export const NodeWrapper = memo(({ id }: { id: string }) => {
       ) : (
         <>
           {/* 非笔迹（便签）才显示边缘拉伸和连线锚点 */}
-          {isSelected && !isDragging && (
+          {isSelected && !isDragging && activeTool === 'cursor' && (
             <>
               <div className="edge-handle edge-t" data-dir="t" />
               <div className="edge-handle edge-b" data-dir="b" />
@@ -126,7 +126,7 @@ export const NodeWrapper = memo(({ id }: { id: string }) => {
             </>
           )}
 
-          {isHovered && !isDragging && (
+          {isHovered && !isDragging && activeTool === 'cursor' && (
             <>
               <div className="connection-anchor anchor-t" data-dir="t" data-nodeid={node.id} />
               <div className="connection-anchor anchor-r" data-dir="r" data-nodeid={node.id} />
