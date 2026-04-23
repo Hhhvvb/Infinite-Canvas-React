@@ -24,9 +24,6 @@ export const useKeyboardShortcuts = () => {
 
       // 处理删除键
       if (e.key === 'Backspace' || e.key === 'Delete') {
-        if (isTyping) return; // 如果正在打字，直接放行，让浏览器删文字
-        
-        // 实时获取最新状态，避免闭包陷阱
         const state = useCanvasStore.getState();
         
         if (state.selectedNodeId) {

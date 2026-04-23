@@ -55,13 +55,13 @@ export const NodeWrapper = memo(({ id }: { id: string }) => {
         height: node.h,
         zIndex: isDragging || isSelected ? 100 : 1,
         
-        // 🚨 核心修复：如果是笔迹，强制扒掉所有的背景、边框、阴影和内边距！
+        // 如果是笔迹，去掉背景、边框、阴影和内边距
         ...(isPath ? {
           backgroundColor: 'transparent',
           borderColor: 'transparent',
           boxShadow: 'none',
-          padding: 0, // 极其关键：消灭 test-node 自带的 16px，让坐标严丝合缝！
-          pointerEvents: 'none', // 让包围盒变成“空气”，允许点击穿透
+          padding: 0,
+          pointerEvents: 'none',
         } : {
           ...COLOR_STYLE_MAP[node.color],
           ...SHAPE_STYLE_MAP[node.shape],
@@ -74,8 +74,6 @@ export const NodeWrapper = memo(({ id }: { id: string }) => {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* 缩放抓手：笔迹和便签都可以缩放！ */}
-      {/* 注意：因为笔迹外层设置了 pointerEvents: 'none'，抓手必须强制设为 'auto' 才能被点中 */}
       {isSelected && !isDragging && !isPath && (
         <>
           <div className="resize-handle handle-tl" data-dir="tl" style={{ pointerEvents: 'auto' }} />
@@ -85,24 +83,24 @@ export const NodeWrapper = memo(({ id }: { id: string }) => {
         </>
       )}
 
-      {/* 渲染分流：笔迹渲染 SVG，便签渲染文字 */}
+      {/* 笔迹渲染 SVG，便签渲染文字 */}
       {isPath && node.points ? (
         <svg 
           width="100%" height="100%" 
           style={{ 
             overflow: 'visible', 
-            pointerEvents: 'none' // 🚨 修复 2.1：容器本身必须是空气，绝对不能阻挡画笔穿透
+            pointerEvents: 'none'
           }}
         >
           <path
             d={getSvgPathFromStroke(node.points)}
             fill="none"
-            stroke="transparent" /* 颜色全透明 */
-            strokeWidth={(node.strokeWidth || 4) + 20}     /* 宽度放大到 24px，体验直接拉满 */
+            stroke="transparent"
+            strokeWidth={(node.strokeWidth || 4) + 20}
             strokeLinecap="round"
             strokeLinejoin="round"
             style={{ 
-              pointerEvents: 'stroke', 
+              pointerEvents: 'stroke',
               cursor: activeTool === 'cursor' ? 'pointer' : 'crosshair' 
             }}
           />

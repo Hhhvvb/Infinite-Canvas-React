@@ -38,7 +38,6 @@ export const PropertyMenu = memo(() => {
     <div 
       className="property-menu-panel"
       style={{ left: `${menuX}px`, top: `${menuY}px` }}
-      // 严密拦截所有鼠标和触摸事件，防止点击菜单时导致便签失焦
       onMouseDown={(e) => e.stopPropagation()} 
       onPointerDown={(e) => e.stopPropagation()}
       onClick={(e) => e.stopPropagation()}

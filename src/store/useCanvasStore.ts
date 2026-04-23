@@ -52,7 +52,7 @@ interface CanvasState {
   addPointToStroke: (x: number, y: number) => void;
   finishStroke: () => void;
   setNoteSettings: (settings: Partial<Pick<CanvasNode, 'shape' | 'color'>>) => void;
-  setPenSettings: (settings: Partial<Pick<CanvasNode, 'shape' | 'color'>>) => void;
+  setPenSettings: (settings: Partial<{ color: NodeColor; size: number }>) => void;
   setOpenSettingMenu: (menu: ToolType | null) => void;
   saveHistory: () => void;
   undo: () => void;
@@ -359,7 +359,7 @@ export const useCanvasStore = create<CanvasState>()(
 
       loadProject: (data) => {
         if (!data.nodes || !data.nodeIds) return;
-        get().saveHistory(); // 导入前存个历史，防止后悔
+        get().saveHistory();
         set({
           nodes: data.nodes,
           nodeIds: data.nodeIds,

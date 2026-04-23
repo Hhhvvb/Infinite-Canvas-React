@@ -23,13 +23,16 @@ const COLOR_HEX: Record<NodeColor, string> = {
 const SHAPES: { value: NodeShape; icon: string }[] = [
   { value: 'rounded', icon: '🟨' }, { value: 'circle', icon: '🟡' },
 ];
-const PEN_SIZES = [2, 4, 8, 12]; // 画笔粗细档位
+const PEN_SIZES = [2, 4, 8, 12];
 
 export const Toolbar = memo(({ activeTool, onToolChange }: ToolbarProps) => {
   // 记录当前展开了哪个工具的设置面板
   const openSettingMenu = useCanvasStore(state => state.openSettingMenu);
   const setOpenSettingMenu = useCanvasStore(state => state.setOpenSettingMenu);
-  const { noteSettings, setNoteSettings, penSettings, setPenSettings } = useCanvasStore();
+  const noteSettings = useCanvasStore(state => state.noteSettings);
+  const setNoteSettings = useCanvasStore(state => state.setNoteSettings);
+  const penSettings = useCanvasStore(state => state.penSettings);
+  const setPenSettings = useCanvasStore(state => state.setPenSettings);
   const undo = useCanvasStore(state => state.undo);
   const redo = useCanvasStore(state => state.redo);
   const pastCount = useCanvasStore(state => state.past.length);
@@ -40,7 +43,6 @@ export const Toolbar = memo(({ activeTool, onToolChange }: ToolbarProps) => {
 
   const handleToolClick = (type: ToolType) => {
     onToolChange(type);
-    // 如果点击的是便签或画笔，切换它的设置面板；否则关闭面板
     if (type === 'rounded' || type === 'pen') {
       setOpenSettingMenu(openSettingMenu === type ? null : type);
     } else {
@@ -60,7 +62,6 @@ export const Toolbar = memo(({ activeTool, onToolChange }: ToolbarProps) => {
   };
 
   const handleReset = () => {
-    // 浏览器原生的确认框，简单好用
     if (window.confirm('确定要清空整个画板吗？\n')) {
       resetCanvas();
     }
@@ -183,7 +184,6 @@ export const Toolbar = memo(({ activeTool, onToolChange }: ToolbarProps) => {
                 className={`pen-size-btn ${penSettings.size === size ? 'active' : ''}`}
                 onClick={() => setPenSettings({ size })}
               >
-                {/* 用黑点的大小直观表示笔的粗细 */}
                 <div style={{ width: size, height: size, backgroundColor: '#334155', borderRadius: '50%' }} />
               </button>
             ))}
