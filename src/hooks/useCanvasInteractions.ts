@@ -3,9 +3,6 @@ import { useCanvasStore } from '@/store/useCanvasStore';
 import type { CanvasNode, HandleDirection } from '@/types';
 
 export const useCanvasInteractions = () => {
-  // ⛔️ 删除了 const store = useCanvasStore(); 
-  // 彻底切断该 Hook 对全局状态的渲染订阅！
-
   const handleMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const state = useCanvasStore.getState(); 
     const target = e.target as HTMLElement;
@@ -47,7 +44,7 @@ export const useCanvasInteractions = () => {
     // 检测是否点击了连接锚点
     const anchorTarget = target.closest('.connection-anchor');
     if (anchorTarget) {
-      e.stopPropagation(); // 阻止触发节点的拖拽或选中
+      e.stopPropagation();
       const nodeId = anchorTarget.getAttribute('data-nodeid')!;
       const handleDir = anchorTarget.getAttribute('data-dir') as HandleDirection;
       
@@ -122,7 +119,7 @@ export const useCanvasInteractions = () => {
         const nodeId = nodeEl.getAttribute('data-id');
         if (nodeId) state.removeNode(nodeId);
       }
-      return; // 删完直接返回，不触发其他逻辑
+      return;
     }
 
     const worldX = (e.clientX - state.camera.x) / state.camera.zoom;
@@ -130,7 +127,7 @@ export const useCanvasInteractions = () => {
 
     if (state.activeTool === 'pen' && state.currentStroke) {
       state.addPointToStroke(worldX, worldY);
-      return; // 终止后续操作
+      return;
     }
 
     if (state.draftConnection) {

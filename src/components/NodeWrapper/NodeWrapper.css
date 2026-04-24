@@ -37,26 +37,25 @@
   right: calc(-40px * var(--inv-zoom, 1));
   bottom: calc(-40px * var(--inv-zoom, 1));
   z-index: -1; 
-  /* background: rgba(255, 165, 0, 0.1); 调试时可以解开这行，看看感应区有多夸张 */
 }
 
-/* 🚨 魔法 2：锚点巨大化点击区 (Fat Hitbox) 
+/* 锚点巨大化点击区 (Fat Hitbox) 
    作用：锚点视觉上依然小巧精致，但它的真实点击范围大得像个盘子，闭着眼都能连上线！*/
 .connection-anchor::after {
   content: '';
   position: absolute;
   /* 在小圆点周围扩张出巨大的热区 */
-  top: calc(-20px * var(--inv-zoom, 1));
-  left: calc(-20px * var(--inv-zoom, 1));
-  right: calc(-20px * var(--inv-zoom, 1));
-  bottom: calc(-20px * var(--inv-zoom, 1));
+  top: calc(-10px * var(--inv-zoom, 1));
+  left: calc(-10px * var(--inv-zoom, 1));
+  right: calc(-10px * var(--inv-zoom, 1));
+  bottom: calc(-10px * var(--inv-zoom, 1));
   border-radius: 50%;
   cursor: crosshair; /* 提示这里可以发起连线 */
   /* background: rgba(0, 255, 0, 0.2); 调试时可以解开这行看点击热区 */
 }
 
-/* 🚨 魔法 3：精准视觉反馈 (Visual Polish) 
-   作用：鼠标成功进入隐形热区时，给小圆点发光效果，确认瞄准 */
+/* 精准视觉反馈 (Visual Polish) 
+   鼠标成功进入隐形热区时，给小圆点发光效果，确认瞄准 */
 .connection-anchor {
   transition: all 0.2s ease-out;
 }

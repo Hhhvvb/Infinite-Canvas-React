@@ -2,8 +2,8 @@
 
 /* 面板主容器 */
 .property-menu-panel {
-  position: absolute; /* 绝对定位，脱离文档流 */
-  z-index: 200;       /* 必须比节点的 100 更高 */
+  position: absolute;
+  z-index: 200;
   display: flex;
   align-items: center;
   gap: 12px;
