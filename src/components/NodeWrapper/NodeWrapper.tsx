@@ -20,7 +20,6 @@ const SHAPE_STYLE_MAP: Record<NodeShape, React.CSSProperties> = {
 };
 
 export const NodeWrapper = memo(({ id }: { id: string }) => {
-  // 节点外壳负责定位、选中态、控制点和不同形状的渲染分发。
   const node = useCanvasStore((state) => state.nodes[id]);
   const zoom = useCanvasStore((state) => state.camera.zoom);
   const activeTool = useCanvasStore((state) => state.activeTool);
@@ -33,18 +32,15 @@ export const NodeWrapper = memo(({ id }: { id: string }) => {
   const inverseZoom = Math.min(1 / zoom, 4);
 
   const handleDoubleClick = useCallback((nodeId: string) => {
-    // 双击普通节点进入文本编辑模式。
     setEditingNodeId(nodeId);
   }, [setEditingNodeId]);
 
   const handleBlur = useCallback(() => {
-    // 文本编辑失焦时退出编辑模式。
     setEditingNodeId(null);
   }, [setEditingNodeId]);
 
   if (!node) return null;
 
-  // 判断是否为笔迹
   const isPath = node.shape === 'path';
 
   return (
@@ -58,7 +54,7 @@ export const NodeWrapper = memo(({ id }: { id: string }) => {
         height: node.h,
         zIndex: isDragging || isSelected ? 100 : 1,
         
-        // 如果是笔迹，去掉背景、边框、阴影和内边距
+        // 笔迹节点只需要 SVG 路径本身，外壳样式会干扰手绘效果。
         ...(isPath ? {
           backgroundColor: 'transparent',
           borderColor: 'transparent',
@@ -86,7 +82,6 @@ export const NodeWrapper = memo(({ id }: { id: string }) => {
         </>
       )}
 
-      {/* 笔迹渲染 SVG，便签渲染文字 */}
       {isPath && node.points ? (
         <svg 
           width="100%" height="100%" 
@@ -119,7 +114,6 @@ export const NodeWrapper = memo(({ id }: { id: string }) => {
         </svg>
       ) : (
         <>
-          {/* 非笔迹（便签）才显示边缘拉伸和连线锚点 */}
           {isSelected && !isDragging && activeTool === 'cursor' && (
             <>
               <div className="edge-handle edge-t" data-dir="t" />

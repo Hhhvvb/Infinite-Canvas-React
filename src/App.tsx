@@ -8,7 +8,6 @@ import { PropertyMenu } from './components/PropertyMenu/PropertyMenu';
 import { getSvgPathFromStroke } from './utils/geometry'; 
 import './App.css';
 
-// 应用主画布：组合工具栏、节点、连线、草稿笔迹和相机变换。
 export default function InfiniteCanvas() {
   const camera = useCanvasStore((state) => state.camera);
   const activeTool = useCanvasStore((state) => state.activeTool);
@@ -18,7 +17,6 @@ export default function InfiniteCanvas() {
   const interactions = useCanvasInteractions();
   const currentStroke = useCanvasStore((state) => state.currentStroke);
   const penSettings = useCanvasStore((state) => state.penSettings);
-  // 将画笔语义颜色映射成 SVG stroke 可用的色值。
   const STROKE_COLOR_MAP: Record<string, string> = {
     yellow: '#fde047', 
     blue: '#7dd3fc', 
@@ -27,7 +25,6 @@ export default function InfiniteCanvas() {
     purple: '#d8b4fe',
   };
 
-  // 注册全局键盘快捷键
   useKeyboardShortcuts();
 
   return (
@@ -48,7 +45,7 @@ export default function InfiniteCanvas() {
 
       <PropertyMenu />
 
-      {/* 无限画布主容器：处理虚拟相机的 Transform 变换 */}
+      {/* 相机变换统一作用在画布内容层，避免逐个节点换算屏幕坐标。 */}
       <div
         id="canvas-export-target"
         style={{
@@ -58,7 +55,6 @@ export default function InfiniteCanvas() {
           height: '100%',
         }}
       >
-        {/* 背景网格 */}
         <div className='grid-bg' />
 
         <EdgeLayer />
@@ -76,7 +72,6 @@ export default function InfiniteCanvas() {
           </svg>
         )}
 
-        {/* 节点渲染列表 */}
         {nodeIds.map((id) => (
           <NodeWrapper key={id} id={id} />
         ))}

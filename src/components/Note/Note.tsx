@@ -13,20 +13,18 @@ interface NoteProps {
 }
 
 export const Note = memo(({ node, isEditing, onDoubleClick, onBlur, onUpdate }: NoteProps) => {
-  // Note 只负责文本编辑和展示，节点尺寸/位置由 NodeWrapper 管理。
   const [localText, setLocalText] = useState(node.content || '');
   const editRef = useRef<HTMLDivElement>(null);
 
-  // 当进入编辑模式时，自动聚焦并将光标移动到文本末尾
   useEffect(() => {
-    // 进入编辑态时聚焦 contentEditable，并把光标放到文本末尾。
+    // contentEditable 不像 input 有 value，需要进入编辑态时手动同步 DOM 文本和光标。
     const currentText = node.content || '';
 
     if (isEditing && editRef.current) {
       editRef.current.innerText = currentText;
       editRef.current.focus();
       
-      const selection = window.getSelection();  // 获取全局光标对象
+      const selection = window.getSelection();
       const range = document.createRange();
       
       if (editRef.current.childNodes.length > 0) {
@@ -67,11 +65,11 @@ export const Note = memo(({ node, isEditing, onDoubleClick, onBlur, onUpdate }: 
           }}
           onWheel={(e) => e.stopPropagation()} 
           
-          // 拦截粘贴事件，只允许纯文本！
           onPaste={(e) => {
-            e.preventDefault(); // 阻止浏览器默认的富文本粘贴行为
-            const text = e.clipboardData.getData('text/plain'); // 强制提取纯文本
-            document.execCommand('insertText', false, text); // 保留撤销(Ctrl+Z)历史
+            // 阻止富文本进入便签，避免粘贴内容破坏统一样式。
+            e.preventDefault();
+            const text = e.clipboardData.getData('text/plain');
+            document.execCommand('insertText', false, text);
           }}
         />
       ) : (

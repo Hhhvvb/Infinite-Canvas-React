@@ -4,7 +4,6 @@ const NODE_COLORS: readonly NodeColor[] = ['yellow', 'blue', 'pink', 'green', 'p
 const NODE_SHAPES: readonly NodeShape[] = ['rounded', 'circle', 'path'];
 const HANDLE_DIRECTIONS: readonly HandleDirection[] = ['t', 'r', 'b', 'l'];
 
-// 以下类型守卫用于把外部 JSON 从 unknown 安全收窄成项目数据。
 const isObject = (value: unknown): value is Record<string, unknown> => (
   typeof value === 'object' && value !== null
 );
@@ -35,7 +34,6 @@ const isPoint = (value: unknown): value is [number, number] => (
 );
 
 const isCanvasNode = (value: unknown): value is CanvasNode => {
-  // 节点校验覆盖基础几何、外观字段和可选笔迹点。
   if (!isObject(value)) return false;
 
   return (
@@ -68,7 +66,7 @@ const isEdge = (value: unknown, nodeIds: Set<string>): value is Edge => {
 };
 
 export const parseCanvasProject = (value: unknown): CanvasProject | null => {
-  // 解析导入文件，失败时返回 null 交给 UI 给出提示。
+  // 外部文件不可信，先收窄数据结构再交给 store 覆盖当前画布。
   if (!isObject(value) || !isObject(value.nodes) || !Array.isArray(value.nodeIds)) {
     return null;
   }

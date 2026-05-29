@@ -11,7 +11,6 @@ interface HistorySnapshot {
 const HISTORY_LIMIT = 100;
 
 interface CanvasState {
-  // --- 状态 (State) ---
   nodes: Record<string, CanvasNode>;
   nodeIds: string[];
   camera: Camera;
@@ -31,7 +30,6 @@ interface CanvasState {
   past: HistorySnapshot[];
   future: HistorySnapshot[];
   
-  // --- 动作 (Actions) ---
   setCamera: (camera: Camera | ((prev: Camera) => Camera)) => void;
   setActiveTool: (tool: ToolType) => void;
   setIsPanning: (isPanning: boolean) => void;
@@ -73,7 +71,6 @@ const cloneSnapshot = (state: Pick<CanvasState, 'nodes' | 'nodeIds' | 'edges'>):
 export const useCanvasStore = create<CanvasState>()(
   persist(
     (set, get) => ({
-      // 初始状态
       nodes: {},
       nodeIds: [],
       camera: { x: 0, y: 0, zoom: 1 },
@@ -93,8 +90,6 @@ export const useCanvasStore = create<CanvasState>()(
       past: [],
       future: [],
 
-      // 基础 Setter
-      // 更新虚拟相机的位置和缩放，支持传入函数式更新。
       setCamera: (camera) => set((state) => ({
         camera: typeof camera === 'function' ? camera(state.camera) : camera 
       })),
@@ -110,7 +105,6 @@ export const useCanvasStore = create<CanvasState>()(
       setPenSettings: (settings) => set(state => ({ penSettings: { ...state.penSettings, ...settings }})),
       setOpenSettingMenu: (menu) => set({ openSettingMenu: menu }),
 
-      // 业务逻辑 Action
       // 新建节点前保存历史，并在创建后自动回到选择工具。
       addNode: (node) => {
         get().saveHistory();
@@ -144,7 +138,6 @@ export const useCanvasStore = create<CanvasState>()(
         });
       },
 
-      // 节点移动：基于 Delta 增量更新
       // 拖拽时每帧只更新位置，历史由交互层在第一次移动时保存。
       updateNodePosition: (id, dx, dy) => set((state) => {
         const node = state.nodes[id];
@@ -157,7 +150,6 @@ export const useCanvasStore = create<CanvasState>()(
         };
       }),
 
-      // 节点缩放
       // 根据拖动的控制点调整尺寸，并保证节点不会小于最小尺寸。
       updateNodeSize: (id, handle, dx, dy) => set((state) => {
         const node = state.nodes[id];
@@ -199,7 +191,6 @@ export const useCanvasStore = create<CanvasState>()(
         };
       }),
 
-      // 更新连线草稿的鼠标终点坐标。
       updateDraftConnection: (x, y) => set((state) => ({
         draftConnection: state.draftConnection 
           ? { ...state.draftConnection, currentX: x, currentY: y } 
@@ -210,7 +201,7 @@ export const useCanvasStore = create<CanvasState>()(
       addEdge: (edge) => {
         const state = get();
         const isDuplicate = state.edges.some(
-          e => (e.sourceNodeId === edge.sourceNodeId && e.targetNodeId === edge.targetNodeId) || (e.sourceNodeId === edge.targetNodeId && e.targetNodeId === edge.sourceNodeId) // 无向图视角下的重复边检查
+          e => (e.sourceNodeId === edge.sourceNodeId && e.targetNodeId === edge.targetNodeId) || (e.sourceNodeId === edge.targetNodeId && e.targetNodeId === edge.sourceNodeId)
         );
         if (isDuplicate) return;
 
@@ -243,13 +234,11 @@ export const useCanvasStore = create<CanvasState>()(
           };
         })
       },
-      // 开始记录一条画笔笔迹。
       startStroke: (x, y) => set({ currentStroke: [[x, y]] }),
       
       // 给当前笔迹追加采样点，并过滤过近的点减少渲染负担。
       addPointToStroke: (x, y) => set((state) => {
         if (!state.currentStroke) return state;
-        // 节流：如果距离上一个点太近，就不记录，优化性能
         const lastPoint = state.currentStroke[state.currentStroke.length - 1];
         if (Math.hypot(lastPoint[0] - x, lastPoint[1] - y) < 4) return state;
         
@@ -274,7 +263,6 @@ export const useCanvasStore = create<CanvasState>()(
             ? [[points[0][0], points[0][1]], [points[0][0] + 0.1, points[0][1] + 0.1]] as [number, number][]
             : points;
 
-          // 核心算法：计算笔迹的包围盒 (Bounding Box)
           const xs = validPoints.map(p => p[0]);
           const ys = validPoints.map(p => p[1]);
           const minX = Math.min(...xs), maxX = Math.max(...xs);
@@ -283,7 +271,7 @@ export const useCanvasStore = create<CanvasState>()(
           const w = Math.max(20, maxX - minX); 
           const h = Math.max(20, maxY - minY);
 
-          // 将绝对世界坐标转换为相对于包围盒左上角的相对坐标
+          // 存相对坐标后，整条笔迹可以像普通节点一样移动和导出。
           const relativePoints: [number, number][] = validPoints.map(p => [p[0] - minX, p[1] - minY]);
 
           const newNode: CanvasNode = {
@@ -318,7 +306,6 @@ export const useCanvasStore = create<CanvasState>()(
           delete newNodes[id];
           return { 
             nodes: newNodes, 
-            // 把源头或目标是这个节点的连线也一起删掉！
             nodeIds: state.nodeIds.filter(nId => nId !== id),
             edges: state.edges.filter(e => e.sourceNodeId !== id && e.targetNodeId !== id),
             selectedNodeId: null,
@@ -326,7 +313,6 @@ export const useCanvasStore = create<CanvasState>()(
         });
       },
 
-      // 删除指定连线并清空边选中态。
       removeEdge: (id) => {
         const current = get();
         if (!current.edges.some(edge => edge.id === id)) return;
@@ -334,7 +320,7 @@ export const useCanvasStore = create<CanvasState>()(
         current.saveHistory();
         set((state) => ({
           edges: state.edges.filter(e => e.id !== id),
-          selectedEdgeId: null, // 删除后清空选中态
+          selectedEdgeId: null,
         }));
       },
 
@@ -342,7 +328,7 @@ export const useCanvasStore = create<CanvasState>()(
       saveHistory: () => set((state) => {
         return {
           past: [...state.past, cloneSnapshot(state)].slice(-HISTORY_LIMIT),
-          future: [], // 只要有真实的新操作，立刻清空未来
+          future: [],
         };
       }),
 
@@ -416,7 +402,7 @@ export const useCanvasStore = create<CanvasState>()(
       },
     }),
     {
-      name: 'infinite-canvas-storage', // 存储在 localStorage 里的 key
+      name: 'infinite-canvas-storage',
       partialize: (state) => ({ 
         nodes: state.nodes,
         nodeIds: state.nodeIds,

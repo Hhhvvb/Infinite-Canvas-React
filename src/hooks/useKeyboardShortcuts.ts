@@ -2,14 +2,12 @@ import { useEffect } from 'react';
 import { useCanvasStore } from '@/store/useCanvasStore';
 
 export const useKeyboardShortcuts = () => {
-  // 绑定全局快捷键：删除、撤销/重做和工具切换。
   const undo = useCanvasStore((state) => state.undo);
   const redo = useCanvasStore((state) => state.redo);
   const setActiveTool = useCanvasStore((state) => state.setActiveTool);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // 焦点拦截（防止打字时触发）
       const activeElement = document.activeElement as HTMLElement;
       const isTyping = 
         activeElement.tagName === 'INPUT' || 
@@ -18,25 +16,22 @@ export const useKeyboardShortcuts = () => {
 
       if (isTyping) return; 
 
-      // 操作系统识别
       const isMac = navigator.userAgent.includes('Mac');
       const isCmdOrCtrl = isMac ? e.metaKey : e.ctrlKey;
       const key = e.key.toLowerCase();
 
-      // 处理删除键
       if (e.key === 'Backspace' || e.key === 'Delete') {
         const state = useCanvasStore.getState();
         
         if (state.selectedNodeId) {
           e.preventDefault();
-          state.removeNode(state.selectedNodeId); // 删便签
+          state.removeNode(state.selectedNodeId);
         } else if (state.selectedEdgeId) {
           e.preventDefault();
-          state.removeEdge(state.selectedEdgeId); // 删连线
+          state.removeEdge(state.selectedEdgeId);
         }
       }
       
-      // 组合键拦截 (撤销/重做)
       if (isCmdOrCtrl) {
         if (key === 'z') {
           e.preventDefault();
@@ -47,7 +42,6 @@ export const useKeyboardShortcuts = () => {
           redo(); 
         }
       } 
-      // 单键拦截 (切换工具)
       else {
         if (key === 'v') setActiveTool('cursor');
         else if (key === 'n') setActiveTool('rounded');

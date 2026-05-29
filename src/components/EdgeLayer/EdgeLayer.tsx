@@ -3,7 +3,6 @@ import { useCanvasStore } from '@/store/useCanvasStore';
 import { getHandlePosition, getBezierPath } from '@/utils/geometry';
 
 export const EdgeLayer = memo(() => {
-  // 连线层单独渲染 SVG，避免节点 DOM 负责复杂路径绘制。
   const edges = useCanvasStore((state) => state.edges);
   const nodes = useCanvasStore((state) => state.nodes);
   const draft = useCanvasStore((state) => state.draftConnection);
@@ -17,10 +16,10 @@ export const EdgeLayer = memo(() => {
         top: 0, left: 0,
         width: '100%', height: '100%',
         overflow: 'visible',
-        pointerEvents: 'none' // 让 SVG 不阻挡鼠标事件
+        // 默认穿透 SVG，只有显式设置 pointerEvents 的路径参与点击。
+        pointerEvents: 'none'
       }}
     >
-      {/* 渲染已确定的连线 */}
       {edges.map(edge => {
         const sourceNode = nodes[edge.sourceNodeId];
         const targetNode = nodes[edge.targetNodeId];
@@ -33,7 +32,7 @@ export const EdgeLayer = memo(() => {
 
         return (
           <g key={edge.id}>
-          {/* 隐形的巨大点击热区 (Fat Hitbox) */}
+          {/* 可见线条很细，额外叠一条透明粗线让用户更容易选中连线。 */}
           <path
             d={path}
             fill="none"
@@ -46,7 +45,6 @@ export const EdgeLayer = memo(() => {
             }}
           />
           
-          {/* 2. 真实的视觉连线 */}
           <path
             d={path}
             fill="none"
@@ -58,7 +56,6 @@ export const EdgeLayer = memo(() => {
         );
       })}
 
-      {/* 渲染正在拖拽中的草稿连线 */}
       {draft && nodes[draft.sourceNodeId] && (
         <path
           d={getBezierPath(
@@ -72,7 +69,7 @@ export const EdgeLayer = memo(() => {
           fill="none"
           stroke="#3b82f6"
           strokeWidth="2"
-          strokeDasharray="5,5" // 虚线
+          strokeDasharray="5,5"
         />
       )}
     </svg>

@@ -1,6 +1,5 @@
 import type { HandleDirection, CanvasNode } from '@/types';
 
-// 获取节点某个锚点(t, r, b, l)的精确世界坐标
 export const getHandlePosition = (node: CanvasNode, handle: HandleDirection) => {
   switch (handle) {
     case 't': return { x: node.x + node.w / 2, y: node.y };
@@ -10,7 +9,6 @@ export const getHandlePosition = (node: CanvasNode, handle: HandleDirection) => 
   }
 };
 
-// 计算三次贝塞尔曲线路径
 export const getBezierPath = (
   x1: number, y1: number, dir1: HandleDirection,
   x2: number, y2: number, dir2: HandleDirection
@@ -21,7 +19,7 @@ export const getBezierPath = (
   let cx1 = x1, cy1 = y1;
   let cx2 = x2, cy2 = y2;
 
-  // 根据引出方向赋予控制点偏移
+  // 控制点沿锚点方向外扩，连线离开节点时会更自然。
   if (dir1 === 't') cy1 -= offset;
   if (dir1 === 'b') cy1 += offset;
   if (dir1 === 'l') cx1 -= offset;
@@ -35,7 +33,6 @@ export const getBezierPath = (
   return `M ${x1} ${y1} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${x2} ${y2}`;
 };
 
-// 将采样点转换成平滑的 SVG Path，用于画笔预览和笔迹节点渲染。
 export const getSvgPathFromStroke = (points: [number, number][]) => {
   if (!points || points.length === 0) return '';
   if (points.length === 1) return `M ${points[0][0]} ${points[0][1]} L ${points[0][0]} ${points[0][1]}`;
@@ -46,22 +43,19 @@ export const getSvgPathFromStroke = (points: [number, number][]) => {
     const p1 = points[i];
     const p2 = points[i + 1];
     
-    // 计算两点之间的中点
     const midPoint = [
       (p1[0] + p2[0]) / 2,
       (p1[1] + p2[1]) / 2
     ];
 
     if (i === 0) {
-      // 头部：直线连到第一个中点
       path += ` L ${midPoint[0]} ${midPoint[1]}`;
     } else {
-      // 身体：前一个真实点作为控制点，中点作为终点，生成完美弧线
+      // 用真实采样点做控制点、相邻中点做终点，可以平滑手绘抖动。
       path += ` Q ${p1[0]} ${p1[1]} ${midPoint[0]} ${midPoint[1]}`;
     }
   }
   
-  // 尾部：补齐最后一个点
   const lastPoint = points[points.length - 1];
   path += ` L ${lastPoint[0]} ${lastPoint[1]}`;
 

@@ -3,7 +3,6 @@ import { useCanvasStore } from '@/store/useCanvasStore';
 import { downloadJSON } from '@/utils/file';
 
 export const useExport = () => {
-  // 导出当前画布数据为 JSON 工程文件。
   const exportJSON = () => {
     const state = useCanvasStore.getState();
     const data = {
@@ -14,11 +13,9 @@ export const useExport = () => {
     downloadJSON(data, `canvas-project-${Date.now()}`);
   };
 
-  // 按节点包围盒裁切画布，并导出为 PNG 图片。
   const exportImage = async () => {
     const state = useCanvasStore.getState();
 
-    // 锁定只包含画布内容的容器
     const targetEl = document.getElementById('canvas-export-target');
     if (!targetEl) return;
 
@@ -28,7 +25,6 @@ export const useExport = () => {
       return;
     }
 
-    // 计算所有节点的包围盒
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     nodes.forEach(node => {
       minX = Math.min(minX, node.x);
@@ -37,7 +33,6 @@ export const useExport = () => {
       maxY = Math.max(maxY, node.y + node.h);
     });
 
-    // 设置留白和最终图片的宽高
     const padding = 80;
     const exportWidth = maxX - minX + padding * 2;
     const exportHeight = maxY - minY + padding * 2;
@@ -48,12 +43,11 @@ export const useExport = () => {
         height: exportHeight,
         backgroundColor: '#ffffff',
         style: {
-          // 导出的瞬间强行把包围盒的左上角对齐到图片的左上角
+          // 导出时临时抵消相机变换，只截取内容包围盒而不是当前视口。
           transform: `translate(${-minX + padding}px, ${-minY + padding}px) scale(1)`,
           transformOrigin: 'top left',
         },
         filter: (node) => {
-          // 不导出背后的点阵网格
           if (node instanceof HTMLElement) {
             if (node.classList.contains('grid-bg')) return false;
           }

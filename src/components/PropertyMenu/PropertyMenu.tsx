@@ -1,4 +1,3 @@
-// src/components/PropertyMenu/PropertyMenu.tsx
 import { memo } from 'react';
 import { useCanvasStore } from '@/store/useCanvasStore';
 import type { NodeColor, NodeShape } from '@/types';
@@ -19,7 +18,6 @@ const COLOR_HEX: Record<NodeColor, string> = {
 };
 
 export const PropertyMenu = memo(() => {
-  // 选中普通便签时，在节点附近显示颜色和形状快捷设置。
   const selectedNodeId = useCanvasStore(state => state.selectedNodeId);
   const selectedNode = useCanvasStore(state => selectedNodeId ? state.nodes[selectedNodeId] : null);
   const updateNodeAppearance = useCanvasStore(state => state.updateNodeAppearance);
@@ -27,11 +25,11 @@ export const PropertyMenu = memo(() => {
 
   if (!selectedNodeId || !selectedNode || selectedNode.shape === 'path') return null;
 
-  // 计算屏幕绝对坐标：节点世界坐标 * 缩放比例 + 画布平移量
+  // 菜单脱离画布缩放层渲染，所以需要把节点世界坐标换算成屏幕坐标。
   let menuX = selectedNode.x * camera.zoom + camera.x;
-  let menuY = selectedNode.y * camera.zoom + camera.y - 60; // 在节点上方 60px 处悬浮
+  let menuY = selectedNode.y * camera.zoom + camera.y - 60;
 
-  // 视口安全边界防护
+  // 贴边节点也要能操作菜单，避免菜单跑出视口。
   menuY = Math.max(10, menuY);
   menuX = Math.max(10, menuX);
 
@@ -45,7 +43,6 @@ export const PropertyMenu = memo(() => {
       onDoubleClick={(e) => e.stopPropagation()}
       onWheel={(e) => e.stopPropagation()}
     >
-      {/* 颜色选择区 */}
       <div className="menu-section">
         {COLORS.map(color => (
           <button
@@ -58,10 +55,8 @@ export const PropertyMenu = memo(() => {
         ))}
       </div>
 
-      {/* 分割线 */}
       <div className="menu-divider" />
 
-      {/* 形状选择区 */}
       <div className="menu-section">
         {SHAPES.map(shape => (
           <button

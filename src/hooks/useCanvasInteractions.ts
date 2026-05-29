@@ -6,7 +6,6 @@ export const useCanvasInteractions = () => {
   // 拖拽/缩放过程中只保存一次历史，避免每个 mousemove 都进入撤销栈。
   const hasSavedTransformHistory = useRef(false);
 
-  // 鼠标按下时根据当前工具决定是选中、创建、连线、绘制还是开始平移。
   const handleMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const state = useCanvasStore.getState(); 
     const target = e.target as HTMLElement;
@@ -16,7 +15,6 @@ export const useCanvasInteractions = () => {
     }
 
     if (e.button === 1) {
-      // 鼠标中键直接进入画布平移模式。
       state.setSelectedNodeId(null);
       state.setEditingNodeId(null);
       state.setIsPanning(true);
@@ -32,14 +30,12 @@ export const useCanvasInteractions = () => {
     const worldY = (e.clientY - state.camera.y) / state.camera.zoom;
 
     if (state.activeTool === 'pen') {
-      // 画笔工具从按下位置开始采样一条临时笔迹。
       state.setSelectedNodeId(null);
       state.startStroke(worldX, worldY);
       return;
     }
 
     if (state.activeTool === 'eraser') {
-      // 橡皮擦点击节点时立即删除该节点。
       const nodeEl = target.closest('.test-node');
       if (nodeEl) {
         const nodeId = nodeEl.getAttribute('data-id');
@@ -48,7 +44,6 @@ export const useCanvasInteractions = () => {
       return;
     }
 
-    // 检测是否点击了连接锚点
     const anchorTarget = target.closest('.connection-anchor');
     if (anchorTarget) {
       // 从锚点拖出一条草稿连线，直到鼠标松开再尝试落到目标锚点。
@@ -56,7 +51,6 @@ export const useCanvasInteractions = () => {
       const nodeId = anchorTarget.getAttribute('data-nodeid')!;
       const handleDir = anchorTarget.getAttribute('data-dir') as HandleDirection;
       
-      // 初始化草稿连线位置为鼠标当前世界坐标
       const worldX = (e.clientX - state.camera.x) / state.camera.zoom;
       const worldY = (e.clientY - state.camera.y) / state.camera.zoom;
       
@@ -69,11 +63,9 @@ export const useCanvasInteractions = () => {
       return;
     }
 
-    // 忽略特定区域
     if (target.isContentEditable || target.closest('[contenteditable="true"]')) return;
     if (target.closest('.toolbar')) return;
 
-    // 处理缩放控制点
     const resizeTarget = target.closest('.resize-handle') || target.closest('.edge-handle');
     if (resizeTarget) {
       // 记录当前缩放手柄方向，真正移动时再保存历史快照。
@@ -85,7 +77,6 @@ export const useCanvasInteractions = () => {
       return;
     }
 
-    // 处理节点点击
     const nodeEl = target.closest('.test-node');
     if (nodeEl) {
       // 选中节点并准备拖拽，单击不移动时不会产生历史记录。
@@ -99,17 +90,14 @@ export const useCanvasInteractions = () => {
       return;
     }
 
-    // 点击空白处
     state.setSelectedNodeId(null);
     state.setEditingNodeId(null);
     
     if (state.activeTool === 'cursor') {
-      // 选择工具点空白处进入拖动画布模式。
       state.setIsPanning(true);
       return;
     }
 
-    // 创建新节点
     const newNode: CanvasNode = {
       id: Date.now().toString(),
       shape: state.activeTool === 'rounded' ? state.noteSettings.shape : 'rounded',
@@ -124,12 +112,10 @@ export const useCanvasInteractions = () => {
     state.addNode(newNode);
   }, []);
 
-  // 鼠标移动时推进当前交互：绘制、连线、缩放、拖拽或平移。
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const state = useCanvasStore.getState();
 
     if (state.activeTool === 'eraser' && e.buttons === 1) {
-      // 按住橡皮擦拖过节点时连续删除。
       const target = e.target as HTMLElement;
       const nodeEl = target.closest('.test-node');
       if (nodeEl) {
@@ -191,25 +177,21 @@ export const useCanvasInteractions = () => {
     }
   }, []);
 
-  // 鼠标松开时结束临时交互，并在需要时提交笔迹或连线。
   const handleMouseUp = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const state = useCanvasStore.getState();
     const target = e.target as HTMLElement;
 
     if (state.currentStroke) {
-      // 将正在绘制的临时笔迹提交成普通节点。
       state.finishStroke();
     }
 
     if (state.draftConnection) {
-      // 如果松开位置是另一个锚点，则生成正式连线。
       const anchorTarget = target.closest('.connection-anchor');
       
       if (anchorTarget) {
         const targetNodeId = anchorTarget.getAttribute('data-nodeid')!;
         const targetHandleDir = anchorTarget.getAttribute('data-dir') as HandleDirection;
 
-        // 防止自己连自己
         if (state.draftConnection.sourceNodeId !== targetNodeId) {
           state.addEdge({
             id: `edge_${Date.now()}`,
@@ -221,7 +203,6 @@ export const useCanvasInteractions = () => {
         }
       }
       
-      // 无论是否连通，松开鼠标都清除草稿线
       state.setDraftConnection(null);
     }
 

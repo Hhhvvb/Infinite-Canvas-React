@@ -6,7 +6,7 @@
  */
 
 export const getDynamicFontSize = (w: number, h: number, text: string): number => {
-  // 预留内边距后，用二分搜索找到能放进便签的最大字号。
+  // 二分搜索比逐像素尝试更适合频繁随节点尺寸变化重算字号。
   const availableW = Math.max(10, w - 24);
   const availableH = Math.max(10, h - 24);
 

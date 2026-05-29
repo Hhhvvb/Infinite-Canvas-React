@@ -27,8 +27,6 @@ const SHAPES: { value: NodeShape; icon: string }[] = [
 const PEN_SIZES = [2, 4, 8, 12];
 
 export const Toolbar = memo(({ activeTool, onToolChange }: ToolbarProps) => {
-  // 工具栏负责工具切换、撤销重做、导入导出和默认画笔/便签设置。
-  // 记录当前展开了哪个工具的设置面板
   const openSettingMenu = useCanvasStore(state => state.openSettingMenu);
   const setOpenSettingMenu = useCanvasStore(state => state.setOpenSettingMenu);
   const noteSettings = useCanvasStore(state => state.noteSettings);
@@ -44,7 +42,7 @@ export const Toolbar = memo(({ activeTool, onToolChange }: ToolbarProps) => {
   const resetCanvas = useCanvasStore(state => state.resetCanvas);
 
   const handleToolClick = (type: ToolType) => {
-    // 点击工具时同步切换工具，并按需展开该工具的设置面板。
+    // 只有带配置项的工具会展开设置面板，避免普通工具占用额外交互空间。
     onToolChange(type);
     if (type === 'rounded' || type === 'pen') {
       setOpenSettingMenu(openSettingMenu === type ? null : type);
@@ -54,7 +52,7 @@ export const Toolbar = memo(({ activeTool, onToolChange }: ToolbarProps) => {
   };
 
   const handleImportJSON = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // 读取并校验工程 JSON，合法后再替换当前画布。
+    // 导入文件来自用户本地，必须先校验结构再覆盖当前画布状态。
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
@@ -83,7 +81,6 @@ export const Toolbar = memo(({ activeTool, onToolChange }: ToolbarProps) => {
   };
 
   const handleReset = () => {
-    // 清空画布前给用户一次确认，避免误触丢失内容。
     if (window.confirm('确定要清空整个画板吗？\n')) {
       resetCanvas();
     }
@@ -98,7 +95,6 @@ export const Toolbar = memo(({ activeTool, onToolChange }: ToolbarProps) => {
       onDoubleClick={(e) => e.stopPropagation()}
       onWheel={(e) => e.stopPropagation()}
     >
-      {/* 主工具栏 */}
       <div className="toolbar">
         {TOOLS.map((tool) => (
           <button
@@ -132,13 +128,10 @@ export const Toolbar = memo(({ activeTool, onToolChange }: ToolbarProps) => {
         </button>
 
         <div className="toolbar-divider-horizontal" />
-        {/* 导出 PNG */}
         <button className="tool-btn" onClick={exportImage} title="导出图片">🖼️</button>
         
-        {/* 导出 JSON */}
         <button className="tool-btn" onClick={exportJSON} title="保存工程">💾</button>
         
-        {/* 导入 JSON (利用隐藏的 input) */}
         <label className="tool-btn" title="读取工程" style={{ cursor: 'pointer' }}>
           📂
           <input type="file" accept=".json" onChange={handleImportJSON} style={{ display: 'none' }} />
@@ -146,18 +139,16 @@ export const Toolbar = memo(({ activeTool, onToolChange }: ToolbarProps) => {
 
         <div className="toolbar-divider-horizontal" />
 
-        {/* 清空画板按钮 */}
         <button 
           className="tool-btn" 
           onClick={handleReset} 
           title="清空画板"
-          style={{ color: '#ef4444' }} // 可以稍微给它加点红色警示一下
+          style={{ color: '#ef4444' }}
         >
           🗑️
         </button>
       </div>
 
-      {/* 便签设置面板 */}
       {openSettingMenu === 'rounded' && activeTool === 'rounded' && (
         <div className="tool-settings-panel">
           <div className="settings-row">
@@ -185,7 +176,6 @@ export const Toolbar = memo(({ activeTool, onToolChange }: ToolbarProps) => {
         </div>
       )}
 
-      {/* 画笔设置面板 */}
       {openSettingMenu === 'pen' && activeTool === 'pen' && (
         <div className="tool-settings-panel pen-panel">
           <div className="settings-row">
