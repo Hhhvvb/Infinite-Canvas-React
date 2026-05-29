@@ -27,7 +27,7 @@ export const getDynamicFontSize = (w: number, h: number, text: string): number =
         continue;
       }
 
-      const isWideChar = /[^\x00-\xff]/.test(text[i]);
+      const isWideChar = text.charCodeAt(i) > 255;
       const charW = isWideChar ? size : size * 0.55;
 
       if (charW > availableW) return false;

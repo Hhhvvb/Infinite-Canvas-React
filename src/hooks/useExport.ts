@@ -3,9 +3,8 @@ import { useCanvasStore } from '@/store/useCanvasStore';
 import { downloadJSON } from '@/utils/file';
 
 export const useExport = () => {
-  const state = useCanvasStore.getState();
-
   const exportJSON = () => {
+    const state = useCanvasStore.getState();
     const data = {
       nodes: state.nodes,
       nodeIds: state.nodeIds,
@@ -15,6 +14,8 @@ export const useExport = () => {
   };
 
   const exportImage = async () => {
+    const state = useCanvasStore.getState();
+
     // 锁定只包含画布内容的容器
     const targetEl = document.getElementById('canvas-export-target');
     if (!targetEl) return;

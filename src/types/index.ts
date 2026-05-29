@@ -36,3 +36,9 @@ export interface Camera {
   y: number;
   zoom: number;
 }
+
+export interface CanvasProject {
+  nodes: Record<string, CanvasNode>;
+  nodeIds: string[];
+  edges: Edge[];
+}

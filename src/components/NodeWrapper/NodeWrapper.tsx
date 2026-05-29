@@ -1,4 +1,4 @@
-import { memo, useCallback, useState } from 'react';
+import { memo, useCallback, useState, type CSSProperties } from 'react';
 import { useCanvasStore } from '@/store/useCanvasStore';
 import { Note } from '@/components/Note/Note';
 import type { NodeColor, NodeShape } from '@/types';
@@ -70,7 +70,7 @@ export const NodeWrapper = memo(({ id }: { id: string }) => {
         }),
 
         '--inv-zoom': inverseZoom
-      } as React.CSSProperties & Record<string, any>}
+      } as CSSProperties & { '--inv-zoom': number }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >

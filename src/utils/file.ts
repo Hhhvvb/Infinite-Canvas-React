@@ -1,4 +1,4 @@
-export const downloadJSON = (data: any, fileName: string) => {
+export const downloadJSON = (data: unknown, fileName: string) => {
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');

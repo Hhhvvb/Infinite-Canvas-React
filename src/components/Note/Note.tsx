@@ -16,14 +16,12 @@ export const Note = memo(({ node, isEditing, onDoubleClick, onBlur, onUpdate }: 
   const [localText, setLocalText] = useState(node.content || '');
   const editRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    setLocalText(node.content || '');
-  }, [node.content]);
-
   // 当进入编辑模式时，自动聚焦并将光标移动到文本末尾
   useEffect(() => {
+    const currentText = node.content || '';
+
     if (isEditing && editRef.current) {
-      editRef.current.innerText = localText;
+      editRef.current.innerText = currentText;
       editRef.current.focus();
       
       const selection = window.getSelection();  // 获取全局光标对象
@@ -39,14 +37,19 @@ export const Note = memo(({ node, isEditing, onDoubleClick, onBlur, onUpdate }: 
       selection?.removeAllRanges();
       selection?.addRange(range);
     }
-  }, [isEditing]);
+  }, [isEditing, node.content]);
 
-  const fontSize = getDynamicFontSize(node.w, node.h, localText);
+  const displayText = isEditing ? localText : node.content || '';
+
+  const fontSize = getDynamicFontSize(node.w, node.h, displayText);
 
   return (
     <div 
       className="note-wrapper"
-      onDoubleClick={() => onDoubleClick(node.id)}
+      onDoubleClick={() => {
+        setLocalText(node.content || '');
+        onDoubleClick(node.id);
+      }}
     >
       {isEditing ? (
         <div
@@ -71,7 +74,7 @@ export const Note = memo(({ node, isEditing, onDoubleClick, onBlur, onUpdate }: 
         />
       ) : (
         <div className="note-text" style={{ fontSize }}>
-          {localText}
+          {displayText}
         </div>
       )}
     </div>

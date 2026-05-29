@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Camera, CanvasNode, ToolType, Edge, DraftConnection, NodeColor, NodeShape } from '@/types';
+import type { Camera, CanvasNode, ToolType, Edge, DraftConnection, NodeColor, NodeShape, CanvasProject } from '@/types';
 import { persist } from 'zustand/middleware';
 
 interface HistorySnapshot {
@@ -7,6 +7,8 @@ interface HistorySnapshot {
   nodeIds: string[];
   edges: Edge[];
 }
+
+const HISTORY_LIMIT = 100;
 
 interface CanvasState {
   // --- 状态 (State) ---
@@ -57,14 +59,14 @@ interface CanvasState {
   saveHistory: () => void;
   undo: () => void;
   redo: () => void;
-  loadProject: (data: any) => void;
+  loadProject: (data: CanvasProject) => void;
   resetCanvas: () => void;
 }
 
-const cloneSnapshot = (state: CanvasState): HistorySnapshot => ({
-  nodes: JSON.parse(JSON.stringify(state.nodes)),
+const cloneSnapshot = (state: Pick<CanvasState, 'nodes' | 'nodeIds' | 'edges'>): HistorySnapshot => ({
+  nodes: structuredClone(state.nodes),
   nodeIds: [...state.nodeIds],
-  edges: JSON.parse(JSON.stringify(state.edges)),
+  edges: structuredClone(state.edges),
 });
 
 export const useCanvasStore = create<CanvasState>()(
@@ -115,8 +117,6 @@ export const useCanvasStore = create<CanvasState>()(
           nodeIds: [...state.nodeIds, node.id],
           activeTool: 'cursor',
           selectedNodeId: node.id,
-          color: node.color,
-          shape: node.shape,
         }))
       },
 
@@ -296,7 +296,10 @@ export const useCanvasStore = create<CanvasState>()(
       },
 
       removeNode: (id) => {
-        get().saveHistory();
+        const current = get();
+        if (!current.nodes[id]) return;
+
+        current.saveHistory();
         set((state) => {
           const newNodes = { ...state.nodes };
           delete newNodes[id];
@@ -311,7 +314,10 @@ export const useCanvasStore = create<CanvasState>()(
       },
 
       removeEdge: (id) => {
-        get().saveHistory();
+        const current = get();
+        if (!current.edges.some(edge => edge.id === id)) return;
+
+        current.saveHistory();
         set((state) => ({
           edges: state.edges.filter(e => e.id !== id),
           selectedEdgeId: null, // 删除后清空选中态
@@ -320,7 +326,7 @@ export const useCanvasStore = create<CanvasState>()(
 
       saveHistory: () => set((state) => {
         return {
-          past: [...state.past, cloneSnapshot(state)],
+          past: [...state.past, cloneSnapshot(state)].slice(-HISTORY_LIMIT),
           future: [], // 只要有真实的新操作，立刻清空未来
         };
       }),
@@ -334,9 +340,9 @@ export const useCanvasStore = create<CanvasState>()(
         return {
           past: newPast,
           future: [cloneSnapshot(state), ...state.future],
-          nodes: JSON.parse(JSON.stringify(previous.nodes)),
+          nodes: structuredClone(previous.nodes),
           nodeIds: [...previous.nodeIds],
-          edges: JSON.parse(JSON.stringify(previous.edges)),
+          edges: structuredClone(previous.edges),
           selectedNodeId: null, 
         };
       }),
@@ -348,23 +354,28 @@ export const useCanvasStore = create<CanvasState>()(
         const newFuture = state.future.slice(1);
 
         return {
-          past: [...state.past, cloneSnapshot(state)],
+          past: [...state.past, cloneSnapshot(state)].slice(-HISTORY_LIMIT),
           future: newFuture,
-          nodes: JSON.parse(JSON.stringify(next.nodes)),
+          nodes: structuredClone(next.nodes),
           nodeIds: [...next.nodeIds],
-          edges: JSON.parse(JSON.stringify(next.edges)),
+          edges: structuredClone(next.edges),
           selectedNodeId: null,
         };
       }),
 
       loadProject: (data) => {
-        if (!data.nodes || !data.nodeIds) return;
         get().saveHistory();
         set({
-          nodes: data.nodes,
-          nodeIds: data.nodeIds,
-          edges: data.edges || [],
+          nodes: structuredClone(data.nodes),
+          nodeIds: [...data.nodeIds],
+          edges: structuredClone(data.edges),
           selectedNodeId: null,
+          selectedEdgeId: null,
+          draggingNodeId: null,
+          resizingHandle: null,
+          editingNodeId: null,
+          draftConnection: null,
+          currentStroke: null,
         });
       },
 

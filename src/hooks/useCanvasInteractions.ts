@@ -1,8 +1,10 @@
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import { useCanvasStore } from '@/store/useCanvasStore';
 import type { CanvasNode, HandleDirection } from '@/types';
 
 export const useCanvasInteractions = () => {
+  const hasSavedTransformHistory = useRef(false);
+
   const handleMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const state = useCanvasStore.getState(); 
     const target = e.target as HTMLElement;
@@ -69,7 +71,10 @@ export const useCanvasInteractions = () => {
     const resizeTarget = target.closest('.resize-handle') || target.closest('.edge-handle');
     if (resizeTarget) {
       const dir = resizeTarget.getAttribute('data-dir');
-      if (dir) state.setResizingHandle(dir);
+      if (dir) {
+        hasSavedTransformHistory.current = false;
+        state.setResizingHandle(dir);
+      }
       return;
     }
 
@@ -79,6 +84,7 @@ export const useCanvasInteractions = () => {
       const nodeId = nodeEl.getAttribute('data-id');
       if (nodeId) {
         state.setSelectedNodeId(nodeId);
+        hasSavedTransformHistory.current = false;
         state.setDraggingNodeId(nodeId);
         e.stopPropagation();
       }
@@ -136,6 +142,10 @@ export const useCanvasInteractions = () => {
     }
 
     if (state.resizingHandle && state.selectedNodeId) {
+      if (!hasSavedTransformHistory.current) {
+        state.saveHistory();
+        hasSavedTransformHistory.current = true;
+      }
       state.updateNodeSize(
         state.selectedNodeId,
         state.resizingHandle,
@@ -146,6 +156,10 @@ export const useCanvasInteractions = () => {
     }
 
     if (state.draggingNodeId) {
+      if (!hasSavedTransformHistory.current) {
+        state.saveHistory();
+        hasSavedTransformHistory.current = true;
+      }
       state.updateNodePosition(
         state.draggingNodeId,
         e.movementX / state.camera.zoom,
@@ -197,6 +211,7 @@ export const useCanvasInteractions = () => {
     state.setIsPanning(false);
     state.setDraggingNodeId(null);
     state.setResizingHandle(null);
+    hasSavedTransformHistory.current = false;
   }, []);
 
   const handleWheel = useCallback((e: React.WheelEvent<HTMLDivElement>) => {

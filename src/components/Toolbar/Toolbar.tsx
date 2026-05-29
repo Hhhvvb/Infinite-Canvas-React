@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import { useCanvasStore } from '@/store/useCanvasStore';
 import { useExport } from '@/hooks/useExport';
+import { parseCanvasProject } from '@/utils/project';
 import type { ToolType, NodeColor, NodeShape } from '@/types';
 import './Toolbar.css';
 
@@ -55,8 +56,25 @@ export const Toolbar = memo(({ activeTool, onToolChange }: ToolbarProps) => {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = (f) => {
-      const data = JSON.parse(f.target?.result as string);
-      loadProject(data);
+      try {
+        const data = JSON.parse(String(f.target?.result ?? ''));
+        const project = parseCanvasProject(data);
+
+        if (!project) {
+          alert('工程文件格式不正确。');
+          return;
+        }
+
+        loadProject(project);
+      } catch {
+        alert('读取工程文件失败，请确认它是有效的 JSON 文件。');
+      } finally {
+        e.currentTarget.value = '';
+      }
+    };
+    reader.onerror = () => {
+      alert('读取工程文件失败。');
+      e.currentTarget.value = '';
     };
     reader.readAsText(file);
   };
