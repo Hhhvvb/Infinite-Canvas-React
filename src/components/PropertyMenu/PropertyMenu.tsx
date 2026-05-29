@@ -19,6 +19,7 @@ const COLOR_HEX: Record<NodeColor, string> = {
 };
 
 export const PropertyMenu = memo(() => {
+  // 选中普通便签时，在节点附近显示颜色和形状快捷设置。
   const selectedNodeId = useCanvasStore(state => state.selectedNodeId);
   const selectedNode = useCanvasStore(state => selectedNodeId ? state.nodes[selectedNodeId] : null);
   const updateNodeAppearance = useCanvasStore(state => state.updateNodeAppearance);

@@ -35,6 +35,7 @@ export const getBezierPath = (
   return `M ${x1} ${y1} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${x2} ${y2}`;
 };
 
+// 将采样点转换成平滑的 SVG Path，用于画笔预览和笔迹节点渲染。
 export const getSvgPathFromStroke = (points: [number, number][]) => {
   if (!points || points.length === 0) return '';
   if (points.length === 1) return `M ${points[0][0]} ${points[0][1]} L ${points[0][0]} ${points[0][1]}`;

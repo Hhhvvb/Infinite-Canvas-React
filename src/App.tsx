@@ -8,6 +8,7 @@ import { PropertyMenu } from './components/PropertyMenu/PropertyMenu';
 import { getSvgPathFromStroke } from './utils/geometry'; 
 import './App.css';
 
+// 应用主画布：组合工具栏、节点、连线、草稿笔迹和相机变换。
 export default function InfiniteCanvas() {
   const camera = useCanvasStore((state) => state.camera);
   const activeTool = useCanvasStore((state) => state.activeTool);
@@ -17,6 +18,7 @@ export default function InfiniteCanvas() {
   const interactions = useCanvasInteractions();
   const currentStroke = useCanvasStore((state) => state.currentStroke);
   const penSettings = useCanvasStore((state) => state.penSettings);
+  // 将画笔语义颜色映射成 SVG stroke 可用的色值。
   const STROKE_COLOR_MAP: Record<string, string> = {
     yellow: '#fde047', 
     blue: '#7dd3fc', 

@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useCanvasStore } from '@/store/useCanvasStore';
 
 export const useKeyboardShortcuts = () => {
+  // 绑定全局快捷键：删除、撤销/重做和工具切换。
   const undo = useCanvasStore((state) => state.undo);
   const redo = useCanvasStore((state) => state.redo);
   const setActiveTool = useCanvasStore((state) => state.setActiveTool);

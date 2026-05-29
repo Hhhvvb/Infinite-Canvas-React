@@ -20,6 +20,7 @@ const SHAPE_STYLE_MAP: Record<NodeShape, React.CSSProperties> = {
 };
 
 export const NodeWrapper = memo(({ id }: { id: string }) => {
+  // 节点外壳负责定位、选中态、控制点和不同形状的渲染分发。
   const node = useCanvasStore((state) => state.nodes[id]);
   const zoom = useCanvasStore((state) => state.camera.zoom);
   const activeTool = useCanvasStore((state) => state.activeTool);
@@ -32,10 +33,12 @@ export const NodeWrapper = memo(({ id }: { id: string }) => {
   const inverseZoom = Math.min(1 / zoom, 4);
 
   const handleDoubleClick = useCallback((nodeId: string) => {
+    // 双击普通节点进入文本编辑模式。
     setEditingNodeId(nodeId);
   }, [setEditingNodeId]);
 
   const handleBlur = useCallback(() => {
+    // 文本编辑失焦时退出编辑模式。
     setEditingNodeId(null);
   }, [setEditingNodeId]);
 

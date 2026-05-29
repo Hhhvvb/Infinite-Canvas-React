@@ -27,6 +27,7 @@ const SHAPES: { value: NodeShape; icon: string }[] = [
 const PEN_SIZES = [2, 4, 8, 12];
 
 export const Toolbar = memo(({ activeTool, onToolChange }: ToolbarProps) => {
+  // 工具栏负责工具切换、撤销重做、导入导出和默认画笔/便签设置。
   // 记录当前展开了哪个工具的设置面板
   const openSettingMenu = useCanvasStore(state => state.openSettingMenu);
   const setOpenSettingMenu = useCanvasStore(state => state.setOpenSettingMenu);
@@ -43,6 +44,7 @@ export const Toolbar = memo(({ activeTool, onToolChange }: ToolbarProps) => {
   const resetCanvas = useCanvasStore(state => state.resetCanvas);
 
   const handleToolClick = (type: ToolType) => {
+    // 点击工具时同步切换工具，并按需展开该工具的设置面板。
     onToolChange(type);
     if (type === 'rounded' || type === 'pen') {
       setOpenSettingMenu(openSettingMenu === type ? null : type);
@@ -52,6 +54,7 @@ export const Toolbar = memo(({ activeTool, onToolChange }: ToolbarProps) => {
   };
 
   const handleImportJSON = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // 读取并校验工程 JSON，合法后再替换当前画布。
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
@@ -80,6 +83,7 @@ export const Toolbar = memo(({ activeTool, onToolChange }: ToolbarProps) => {
   };
 
   const handleReset = () => {
+    // 清空画布前给用户一次确认，避免误触丢失内容。
     if (window.confirm('确定要清空整个画板吗？\n')) {
       resetCanvas();
     }

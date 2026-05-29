@@ -13,11 +13,13 @@ interface NoteProps {
 }
 
 export const Note = memo(({ node, isEditing, onDoubleClick, onBlur, onUpdate }: NoteProps) => {
+  // Note 只负责文本编辑和展示，节点尺寸/位置由 NodeWrapper 管理。
   const [localText, setLocalText] = useState(node.content || '');
   const editRef = useRef<HTMLDivElement>(null);
 
   // 当进入编辑模式时，自动聚焦并将光标移动到文本末尾
   useEffect(() => {
+    // 进入编辑态时聚焦 contentEditable，并把光标放到文本末尾。
     const currentText = node.content || '';
 
     if (isEditing && editRef.current) {

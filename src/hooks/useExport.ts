@@ -3,6 +3,7 @@ import { useCanvasStore } from '@/store/useCanvasStore';
 import { downloadJSON } from '@/utils/file';
 
 export const useExport = () => {
+  // 导出当前画布数据为 JSON 工程文件。
   const exportJSON = () => {
     const state = useCanvasStore.getState();
     const data = {
@@ -13,6 +14,7 @@ export const useExport = () => {
     downloadJSON(data, `canvas-project-${Date.now()}`);
   };
 
+  // 按节点包围盒裁切画布，并导出为 PNG 图片。
   const exportImage = async () => {
     const state = useCanvasStore.getState();
 

@@ -3,6 +3,7 @@ import { useCanvasStore } from '@/store/useCanvasStore';
 import { getHandlePosition, getBezierPath } from '@/utils/geometry';
 
 export const EdgeLayer = memo(() => {
+  // 连线层单独渲染 SVG，避免节点 DOM 负责复杂路径绘制。
   const edges = useCanvasStore((state) => state.edges);
   const nodes = useCanvasStore((state) => state.nodes);
   const draft = useCanvasStore((state) => state.draftConnection);

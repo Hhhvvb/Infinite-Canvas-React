@@ -63,6 +63,7 @@ interface CanvasState {
   resetCanvas: () => void;
 }
 
+// 只复制可撤销的画布内容，避免把相机和临时交互状态写进历史。
 const cloneSnapshot = (state: Pick<CanvasState, 'nodes' | 'nodeIds' | 'edges'>): HistorySnapshot => ({
   nodes: structuredClone(state.nodes),
   nodeIds: [...state.nodeIds],
@@ -93,6 +94,7 @@ export const useCanvasStore = create<CanvasState>()(
       future: [],
 
       // 基础 Setter
+      // 更新虚拟相机的位置和缩放，支持传入函数式更新。
       setCamera: (camera) => set((state) => ({
         camera: typeof camera === 'function' ? camera(state.camera) : camera 
       })),
@@ -109,6 +111,7 @@ export const useCanvasStore = create<CanvasState>()(
       setOpenSettingMenu: (menu) => set({ openSettingMenu: menu }),
 
       // 业务逻辑 Action
+      // 新建节点前保存历史，并在创建后自动回到选择工具。
       addNode: (node) => {
         get().saveHistory();
 
@@ -120,6 +123,7 @@ export const useCanvasStore = create<CanvasState>()(
         }))
       },
 
+      // 编辑内容只在文本真实变化时入栈，避免空提交污染撤销历史。
       updateNodeContent: (id, content) => {
         const state = get();
         const node = state.nodes[id];
@@ -141,6 +145,7 @@ export const useCanvasStore = create<CanvasState>()(
       },
 
       // 节点移动：基于 Delta 增量更新
+      // 拖拽时每帧只更新位置，历史由交互层在第一次移动时保存。
       updateNodePosition: (id, dx, dy) => set((state) => {
         const node = state.nodes[id];
         if (!node) return state;
@@ -153,6 +158,7 @@ export const useCanvasStore = create<CanvasState>()(
       }),
 
       // 节点缩放
+      // 根据拖动的控制点调整尺寸，并保证节点不会小于最小尺寸。
       updateNodeSize: (id, handle, dx, dy) => set((state) => {
         const node = state.nodes[id];
         if (!node) return state;
@@ -193,12 +199,14 @@ export const useCanvasStore = create<CanvasState>()(
         };
       }),
 
+      // 更新连线草稿的鼠标终点坐标。
       updateDraftConnection: (x, y) => set((state) => ({
         draftConnection: state.draftConnection 
           ? { ...state.draftConnection, currentX: x, currentY: y } 
           : null
       })),
       
+      // 添加连线时阻止两个节点之间出现重复边。
       addEdge: (edge) => {
         const state = get();
         const isDuplicate = state.edges.some(
@@ -213,6 +221,7 @@ export const useCanvasStore = create<CanvasState>()(
         }));
       },
 
+      // 更新便签外观，并在颜色或形状真实变化时保存历史。
       updateNodeAppearance: (id, updates) => {
         const state = get();
         const node = state.nodes[id];
@@ -234,8 +243,10 @@ export const useCanvasStore = create<CanvasState>()(
           };
         })
       },
+      // 开始记录一条画笔笔迹。
       startStroke: (x, y) => set({ currentStroke: [[x, y]] }),
       
+      // 给当前笔迹追加采样点，并过滤过近的点减少渲染负担。
       addPointToStroke: (x, y) => set((state) => {
         if (!state.currentStroke) return state;
         // 节流：如果距离上一个点太近，就不记录，优化性能
@@ -245,6 +256,7 @@ export const useCanvasStore = create<CanvasState>()(
         return { currentStroke: [...state.currentStroke, [x, y]] };
       }),
 
+      // 结束画笔笔迹，将临时采样点转换成一个 path 类型节点。
       finishStroke: () => {
         const points = get().currentStroke;
         if (!points || points.length === 0) {
@@ -295,6 +307,7 @@ export const useCanvasStore = create<CanvasState>()(
         })
       },
 
+      // 删除节点时同步删除所有连接到它的边。
       removeNode: (id) => {
         const current = get();
         if (!current.nodes[id]) return;
@@ -313,6 +326,7 @@ export const useCanvasStore = create<CanvasState>()(
         });
       },
 
+      // 删除指定连线并清空边选中态。
       removeEdge: (id) => {
         const current = get();
         if (!current.edges.some(edge => edge.id === id)) return;
@@ -324,6 +338,7 @@ export const useCanvasStore = create<CanvasState>()(
         }));
       },
 
+      // 保存当前画布快照，并限制历史栈长度避免长期使用占用过多内存。
       saveHistory: () => set((state) => {
         return {
           past: [...state.past, cloneSnapshot(state)].slice(-HISTORY_LIMIT),
@@ -331,6 +346,7 @@ export const useCanvasStore = create<CanvasState>()(
         };
       }),
 
+      // 回到上一个历史快照，并把当前快照放入 redo 栈。
       undo: () => set((state) => {
         if (state.past.length === 0) return state; 
         
@@ -347,6 +363,7 @@ export const useCanvasStore = create<CanvasState>()(
         };
       }),
 
+      // 从 redo 栈恢复下一步快照。
       redo: () => set((state) => {
         if (state.future.length === 0) return state; 
         
@@ -363,6 +380,7 @@ export const useCanvasStore = create<CanvasState>()(
         };
       }),
 
+      // 用导入的工程数据替换当前画布，并清空所有临时交互状态。
       loadProject: (data) => {
         get().saveHistory();
         set({
@@ -379,6 +397,7 @@ export const useCanvasStore = create<CanvasState>()(
         });
       },
 
+      // 清空画布内容前保存一次历史，方便用户撤销恢复。
       resetCanvas: () => {
         const state = get();
         if (state.nodeIds.length === 0 && state.edges.length === 0) return;
