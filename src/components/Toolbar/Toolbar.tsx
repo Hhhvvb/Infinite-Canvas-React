@@ -1,4 +1,19 @@
 import { memo } from 'react';
+import {
+  Circle,
+  Eraser,
+  FolderOpen,
+  ImageDown,
+  MousePointer2,
+  PenLine,
+  Redo2,
+  Save,
+  Square,
+  StickyNote,
+  Trash2,
+  Undo2,
+  type LucideIcon,
+} from 'lucide-react';
 import { useCanvasStore } from '@/store/useCanvasStore';
 import { useExport } from '@/hooks/useExport';
 import { parseCanvasProject } from '@/utils/project';
@@ -10,19 +25,23 @@ interface ToolbarProps {
   onToolChange: (tool: ToolType) => void;
 }
 
-const TOOLS: { type: ToolType; icon: string; label: string; shortcut: string }[] = [
-  { type: 'cursor', icon: '👆', label: '选择', shortcut: 'V' },
-  { type: 'rounded', icon: '📝', label: '便签', shortcut: 'N' },
-  { type: 'pen', icon: '✏️', label: '画笔', shortcut: 'P' },
-  { type: 'eraser', icon: '🧼', label: '橡皮擦', shortcut: 'E' },
+const ICON_SIZE = 20;
+const ICON_STROKE_WIDTH = 2;
+
+const TOOLS: { type: ToolType; icon: LucideIcon; label: string; shortcut: string }[] = [
+  { type: 'cursor', icon: MousePointer2, label: '选择', shortcut: 'V' },
+  { type: 'rounded', icon: StickyNote, label: '便签', shortcut: 'N' },
+  { type: 'pen', icon: PenLine, label: '画笔', shortcut: 'P' },
+  { type: 'eraser', icon: Eraser, label: '橡皮擦', shortcut: 'E' },
 ];
 
 const COLORS: NodeColor[] = ['yellow', 'blue', 'pink', 'green', 'purple'];
 const COLOR_HEX: Record<NodeColor, string> = {
   yellow: '#fef08a', blue: '#bae6fd', pink: '#fbcfe8', green: '#bbf7d0', purple: '#e9d5ff',
 };
-const SHAPES: { value: NodeShape; icon: string }[] = [
-  { value: 'rounded', icon: '🟨' }, { value: 'circle', icon: '🟡' },
+const SHAPES: { value: NodeShape; icon: LucideIcon; label: string }[] = [
+  { value: 'rounded', icon: Square, label: '方形' },
+  { value: 'circle', icon: Circle, label: '圆形' },
 ];
 const PEN_SIZES = [2, 4, 8, 12];
 
@@ -96,16 +115,19 @@ export const Toolbar = memo(({ activeTool, onToolChange }: ToolbarProps) => {
       onWheel={(e) => e.stopPropagation()}
     >
       <div className="toolbar">
-        {TOOLS.map((tool) => (
-          <button
-            key={tool.type}
-            className={`tool-btn ${activeTool === tool.type ? 'active' : ''}`}
-            onClick={() => handleToolClick(tool.type)}
-            title={`${tool.label} (${tool.shortcut})`}
-          >
-            {tool.icon}
-          </button>
-        ))}
+        {TOOLS.map((tool) => {
+          const ToolIcon = tool.icon;
+          return (
+            <button
+              key={tool.type}
+              className={`tool-btn ${activeTool === tool.type ? 'active' : ''}`}
+              onClick={() => handleToolClick(tool.type)}
+              title={`${tool.label} (${tool.shortcut})`}
+            >
+              <ToolIcon size={ICON_SIZE} strokeWidth={ICON_STROKE_WIDTH} />
+            </button>
+          );
+        })}
         <div className="toolbar-divider-horizontal" />
         
         <button 
@@ -115,7 +137,7 @@ export const Toolbar = memo(({ activeTool, onToolChange }: ToolbarProps) => {
           title="撤销 (Ctrl+Z)"
           style={{ opacity: pastCount === 0 ? 0.3 : 1, cursor: pastCount === 0 ? 'not-allowed' : 'pointer' }}
         >
-          ↩️
+          <Undo2 size={ICON_SIZE} strokeWidth={ICON_STROKE_WIDTH} />
         </button>
         <button 
           className="tool-btn" 
@@ -124,16 +146,20 @@ export const Toolbar = memo(({ activeTool, onToolChange }: ToolbarProps) => {
           title="重做 (Ctrl+Y)"
           style={{ opacity: futureCount === 0 ? 0.3 : 1, cursor: futureCount === 0 ? 'not-allowed' : 'pointer' }}
         >
-          ↪️
+          <Redo2 size={ICON_SIZE} strokeWidth={ICON_STROKE_WIDTH} />
         </button>
 
         <div className="toolbar-divider-horizontal" />
-        <button className="tool-btn" onClick={exportImage} title="导出图片">🖼️</button>
+        <button className="tool-btn" onClick={exportImage} title="导出图片">
+          <ImageDown size={ICON_SIZE} strokeWidth={ICON_STROKE_WIDTH} />
+        </button>
         
-        <button className="tool-btn" onClick={exportJSON} title="保存工程">💾</button>
+        <button className="tool-btn" onClick={exportJSON} title="保存工程">
+          <Save size={ICON_SIZE} strokeWidth={ICON_STROKE_WIDTH} />
+        </button>
         
         <label className="tool-btn" title="读取工程" style={{ cursor: 'pointer' }}>
-          📂
+          <FolderOpen size={ICON_SIZE} strokeWidth={ICON_STROKE_WIDTH} />
           <input type="file" accept=".json" onChange={handleImportJSON} style={{ display: 'none' }} />
         </label>
 
@@ -145,7 +171,7 @@ export const Toolbar = memo(({ activeTool, onToolChange }: ToolbarProps) => {
           title="清空画板"
           style={{ color: '#ef4444' }}
         >
-          🗑️
+          <Trash2 size={ICON_SIZE} strokeWidth={ICON_STROKE_WIDTH} />
         </button>
       </div>
 
@@ -163,15 +189,19 @@ export const Toolbar = memo(({ activeTool, onToolChange }: ToolbarProps) => {
           </div>
           <div className="settings-divider" />
           <div className="settings-row">
-            {SHAPES.map(shape => (
-              <button
-                key={shape.value}
-                className={`shape-icon ${noteSettings.shape === shape.value ? 'active' : ''}`}
-                onClick={() => setNoteSettings({ shape: shape.value })}
-              >
-                {shape.icon}
-              </button>
-            ))}
+            {SHAPES.map(shape => {
+              const ShapeIcon = shape.icon;
+              return (
+                <button
+                  key={shape.value}
+                  className={`shape-icon ${noteSettings.shape === shape.value ? 'active' : ''}`}
+                  onClick={() => setNoteSettings({ shape: shape.value })}
+                  title={shape.label}
+                >
+                  <ShapeIcon size={18} strokeWidth={ICON_STROKE_WIDTH} />
+                </button>
+              );
+            })}
           </div>
         </div>
       )}

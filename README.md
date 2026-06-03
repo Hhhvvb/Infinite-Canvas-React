@@ -2,7 +2,7 @@
 
 一个基于 React + TypeScript 的无限画布项目，支持便签节点、连线、自由笔迹、缩放平移、撤销重做、工程导入导出。
 
-在线体验: https://www.firevsice.me/
+在线体验(Windows/Mac): https://www.firevsice.me/
 
 ## 项目定位
 
