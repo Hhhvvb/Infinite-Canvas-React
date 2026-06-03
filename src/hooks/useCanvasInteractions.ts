@@ -1,10 +1,63 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useCanvasStore } from '@/store/useCanvasStore';
 import type { CanvasNode, HandleDirection } from '@/types';
+
+const normalizeWheelDelta = (e: React.WheelEvent<HTMLDivElement>) => {
+  // 不同浏览器/设备的 wheel delta 单位不同，先统一成接近像素的值再参与相机计算。
+  const modeSize = e.deltaMode === WheelEvent.DOM_DELTA_LINE ? 16 : 1;
+  return {
+    x: e.deltaX * modeSize,
+    y: e.deltaY * modeSize,
+  };
+};
+
+// Mac 触控板更常用双指平移；平台分支可以保留 Windows 鼠标滚轮缩放习惯。
+const isMacLike = () => /Mac|iPhone|iPad|iPod/.test(navigator.platform || navigator.userAgent);
 
 export const useCanvasInteractions = () => {
   // 拖拽/缩放过程中只保存一次历史，避免每个 mousemove 都进入撤销栈。
   const hasSavedTransformHistory = useRef(false);
+  const isSpacePressed = useRef(false);
+
+  useEffect(() => {
+    // Space 平移是临时按键态，放在 ref 里可避免每次 keydown 都触发组件渲染。
+    const isTypingTarget = (target: EventTarget | null) => {
+      const element = target as HTMLElement | null;
+      return (
+        element?.tagName === 'INPUT' ||
+        element?.tagName === 'TEXTAREA' ||
+        element?.isContentEditable
+      );
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // 文本编辑时空格必须优先输入字符，不能抢成画布平移快捷键。
+      if (e.code !== 'Space' || isTypingTarget(e.target)) return;
+      e.preventDefault();
+      isSpacePressed.current = true;
+    };
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.code !== 'Space') return;
+      e.preventDefault();
+      isSpacePressed.current = false;
+    };
+
+    const handleWindowBlur = () => {
+      // 用户按住 Space 切走窗口时可能收不到 keyup，需要兜底清理按键态。
+      isSpacePressed.current = false;
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    window.addEventListener('blur', handleWindowBlur);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+      window.removeEventListener('blur', handleWindowBlur);
+    };
+  }, []);
 
   const handleMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const state = useCanvasStore.getState(); 
@@ -15,14 +68,26 @@ export const useCanvasInteractions = () => {
     }
 
     if (e.button === 1) {
+      // 中键平移照顾传统鼠标用户，Space + 左键则照顾触控板和妙控鼠标用户。
       state.setSelectedNodeId(null);
       state.setEditingNodeId(null);
       state.setIsPanning(true);
       return;
     }
 
-    if (e.button !== 0) return;
     if (target.closest('.toolbar-wrapper')) return;
+
+    if (e.button !== 0) return;
+
+    if (target.isContentEditable || target.closest('[contenteditable="true"]')) return;
+
+    if (isSpacePressed.current) {
+      // Space 平移优先于工具行为，避免按住空格时误创建节点或拖动节点。
+      state.setSelectedNodeId(null);
+      state.setEditingNodeId(null);
+      state.setIsPanning(true);
+      return;
+    }
     
     const defaultW = 200;
     const defaultH = 120;
@@ -63,7 +128,6 @@ export const useCanvasInteractions = () => {
       return;
     }
 
-    if (target.isContentEditable || target.closest('[contenteditable="true"]')) return;
     if (target.closest('.toolbar')) return;
 
     const resizeTarget = target.closest('.resize-handle') || target.closest('.edge-handle');
@@ -94,6 +158,7 @@ export const useCanvasInteractions = () => {
     state.setEditingNodeId(null);
     
     if (state.activeTool === 'cursor') {
+      // 选择工具点空白处直接平移，符合白板类工具的默认浏览行为。
       state.setIsPanning(true);
       return;
     }
@@ -134,6 +199,7 @@ export const useCanvasInteractions = () => {
     }
 
     if (state.draftConnection) {
+      // 草稿连线只更新临时终点，真正的边在 mouseup 命中锚点后才入库。
       state.updateDraftConnection(worldX, worldY);
       return;
     }
@@ -186,6 +252,7 @@ export const useCanvasInteractions = () => {
     }
 
     if (state.draftConnection) {
+      // 松开时没有落到合法锚点也要清理草稿，避免残留半条连线。
       const anchorTarget = target.closest('.connection-anchor');
       
       if (anchorTarget) {
@@ -212,12 +279,25 @@ export const useCanvasInteractions = () => {
     hasSavedTransformHistory.current = false;
   }, []);
 
-  // 滚轮以鼠标位置为中心缩放虚拟相机。
+  // Mac 普通滚动用于平移；非 Mac 或按住修饰键时，用滚轮围绕鼠标位置缩放。
   const handleWheel = useCallback((e: React.WheelEvent<HTMLDivElement>) => {
+    e.preventDefault();
+
     const state = useCanvasStore.getState();
-    const zoomSensitivity = 0.05;
-    const delta = e.deltaY > 0 ? -1 : 1;
-    const newZoom = Math.max(0.1, Math.min(5, state.camera.zoom + delta * zoomSensitivity));
+    const wheelDelta = normalizeWheelDelta(e);
+    const shouldPanOnWheel = isMacLike() && !e.metaKey && !e.ctrlKey && !e.altKey;
+
+    if (shouldPanOnWheel) {
+      state.setCamera((prev) => ({
+        ...prev,
+        x: prev.x - wheelDelta.x,
+        y: prev.y - wheelDelta.y,
+      }));
+      return;
+    }
+
+    const zoomFactor = Math.exp(-wheelDelta.y * 0.002);
+    const newZoom = Math.max(0.1, Math.min(5, state.camera.zoom * zoomFactor));
     
     if (newZoom === state.camera.zoom) return;
 

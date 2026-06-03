@@ -34,6 +34,7 @@ const isPoint = (value: unknown): value is [number, number] => (
 );
 
 const isCanvasNode = (value: unknown): value is CanvasNode => {
+  // 导入节点必须包含完整几何信息，否则渲染和连线计算都会变成不确定状态。
   if (!isObject(value)) return false;
 
   return (
@@ -78,6 +79,7 @@ export const parseCanvasProject = (value: unknown): CanvasProject | null => {
   const normalizedNodes: Record<string, CanvasNode> = {};
 
   for (const id of nodeIds) {
+    // nodeIds 是渲染顺序来源，节点自身 id 必须和索引一致，避免出现幽灵节点。
     const node = nodes[id];
     if (!isCanvasNode(node) || node.id !== id) return null;
     normalizedNodes[id] = node;
@@ -87,6 +89,7 @@ export const parseCanvasProject = (value: unknown): CanvasProject | null => {
   const edgesValue = value.edges;
   if (edgesValue !== undefined && !Array.isArray(edgesValue)) return null;
 
+  // 过滤非法边而不是整份导入失败，可以尽量恢复用户有效内容。
   const edges = (edgesValue ?? []).filter((edge): edge is Edge => isEdge(edge, nodeIdSet));
 
   return {

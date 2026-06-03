@@ -90,6 +90,7 @@ export const useCanvasStore = create<CanvasState>()(
       past: [],
       future: [],
 
+      // 这些 setter 只维护 UI/交互临时状态，不进入 Undo/Redo 历史。
       setCamera: (camera) => set((state) => ({
         camera: typeof camera === 'function' ? camera(state.camera) : camera 
       })),
@@ -105,6 +106,7 @@ export const useCanvasStore = create<CanvasState>()(
       setPenSettings: (settings) => set(state => ({ penSettings: { ...state.penSettings, ...settings }})),
       setOpenSettingMenu: (menu) => set({ openSettingMenu: menu }),
 
+      // 节点类操作会改变画布内容，通常需要保存历史快照。
       // 新建节点前保存历史，并在创建后自动回到选择工具。
       addNode: (node) => {
         get().saveHistory();
@@ -197,6 +199,7 @@ export const useCanvasStore = create<CanvasState>()(
           : null
       })),
       
+      // 连线类操作只保存稳定边，拖拽过程中的草稿线不写入 edges。
       // 添加连线时阻止两个节点之间出现重复边。
       addEdge: (edge) => {
         const state = get();
@@ -236,6 +239,7 @@ export const useCanvasStore = create<CanvasState>()(
       },
       startStroke: (x, y) => set({ currentStroke: [[x, y]] }),
       
+      // 笔迹先以临时点集存在，停笔后再转成节点，方便复用节点存储和导出流程。
       // 给当前笔迹追加采样点，并过滤过近的点减少渲染负担。
       addPointToStroke: (x, y) => set((state) => {
         if (!state.currentStroke) return state;
@@ -263,6 +267,7 @@ export const useCanvasStore = create<CanvasState>()(
             ? [[points[0][0], points[0][1]], [points[0][0] + 0.1, points[0][1] + 0.1]] as [number, number][]
             : points;
 
+          // 用包围盒作为 path 节点的外框，后续移动/导出只需要处理节点坐标。
           const xs = validPoints.map(p => p[0]);
           const ys = validPoints.map(p => p[1]);
           const minX = Math.min(...xs), maxX = Math.max(...xs);
@@ -324,6 +329,7 @@ export const useCanvasStore = create<CanvasState>()(
         }));
       },
 
+      // 历史类操作只回滚画布内容，不回滚相机位置和正在拖拽等临时状态。
       // 保存当前画布快照，并限制历史栈长度避免长期使用占用过多内存。
       saveHistory: () => set((state) => {
         return {
@@ -403,6 +409,7 @@ export const useCanvasStore = create<CanvasState>()(
     }),
     {
       name: 'infinite-canvas-storage',
+      // 只持久化可恢复的画布数据，避免刷新后还保留“正在拖拽/正在编辑”等瞬时状态。
       partialize: (state) => ({ 
         nodes: state.nodes,
         nodeIds: state.nodeIds,

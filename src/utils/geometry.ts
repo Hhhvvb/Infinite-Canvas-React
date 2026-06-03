@@ -1,6 +1,7 @@
 import type { HandleDirection, CanvasNode } from '@/types';
 
 export const getHandlePosition = (node: CanvasNode, handle: HandleDirection) => {
+  // 连线始终挂在节点边缘中点，节点移动或缩放后只需重新计算锚点即可跟随。
   switch (handle) {
     case 't': return { x: node.x + node.w / 2, y: node.y };
     case 'r': return { x: node.x + node.w, y: node.y + node.h / 2 };
@@ -13,6 +14,7 @@ export const getBezierPath = (
   x1: number, y1: number, dir1: HandleDirection,
   x2: number, y2: number, dir2: HandleDirection
 ) => {
+  // 距离越远控制点越长，近距离也保留最小弯曲半径，避免线条挤在节点边缘。
   const distance = Math.hypot(x2 - x1, y2 - y1);
   const offset = Math.max(50, distance * 0.25); 
 
@@ -34,6 +36,7 @@ export const getBezierPath = (
 };
 
 export const getSvgPathFromStroke = (points: [number, number][]) => {
+  // SVG path 比大量 DOM 点更轻，也方便导出时作为普通节点一起渲染。
   if (!points || points.length === 0) return '';
   if (points.length === 1) return `M ${points[0][0]} ${points[0][1]} L ${points[0][0]} ${points[0][1]}`;
 
